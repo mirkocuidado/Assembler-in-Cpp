@@ -1,0 +1,28 @@
+﻿  Main.cpp
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\symbol_table.h(6): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\for_table.h(3): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\for_table.h(4): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(11): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(12): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\reloc_table.h(3): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\reloc_table.h(4): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(13): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\equ_table.h(3): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\equ_table.h(4): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(30): warning C4018: '<': signed/unsigned mismatch
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(62): warning C4018: '<': signed/unsigned mismatch
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(264): warning C4018: '<': signed/unsigned mismatch
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(297): warning C4018: '<': signed/unsigned mismatch
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(525): warning C4018: '<': signed/unsigned mismatch
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(670): warning C4018: '<': signed/unsigned mismatch
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(702): warning C4018: '<': signed/unsigned mismatch
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(919): warning C4018: '<': signed/unsigned mismatch
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1027): warning C4018: '<': signed/unsigned mismatch
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(2159): warning C4018: '<': signed/unsigned mismatch
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(2246): warning C4018: '<': signed/unsigned mismatch
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(2274): warning C4018: '<': signed/unsigned mismatch
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(2305): warning C4018: '<': signed/unsigned mismatch
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(107): warning C4715: 'decToBinary': not all control paths return a value
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(119): warning C4715: 'getReg': not all control paths return a value
+  sistemski.vcxproj -> C:\Users\HP\Desktop\sistemski\Debug\sistemski.exe
