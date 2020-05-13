@@ -49,7 +49,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <Text Include="input.txt">
+    <Text Include="input.s">
       <Filter>Source Files</Filter>
     </Text>
   </ItemGroup>

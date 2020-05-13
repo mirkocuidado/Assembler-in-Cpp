@@ -198,13 +198,14 @@ void addF(int p, string s, int sn, string sek, char ss = ' ') {
 	}
 }
 
-int main() {
+int main(int argc, char* argv[]) {
 
 	try{
 
+		if (argc != 4) throw "Not enough parameters!";
 
 		ifstream inFile;
-		inFile.open("input.txt");
+		inFile.open(argv[argc-1]);
 		if (inFile.fail()) {
 			throw "FILE ERROR! ";
 			exit(1);
@@ -570,10 +571,12 @@ int main() {
 								cout << izraz << endl;
 							}
 							else {
-								if (pom == nullptr) add(s1, BROJ_SEKCIJE, 'l', false, 0, 0);
+								if (pom == nullptr) {
+									add(s1, BROJ_SEKCIJE, 'l', false, 0, 0); posl->setEqu();
+								}
+								else pom->setEqu();
 
 								addE(s1, nizI, niz, nizZ, znak);
-								posl->setEqu();
 
 							}
 
@@ -973,10 +976,11 @@ int main() {
 										cout << izraz << endl;
 									}
 									else {
-										if (poom == nullptr) add(s1, BROJ_SEKCIJE, 'l', false, 0, 0);
+										if (poom == nullptr) { add(s1, BROJ_SEKCIJE, 'l', false, 0, 0); posl->setEqu(); }
+										else poom->setEqu();
 
 										addE(s1, nizI, niz, nizZ, znak);
-										posl->setEqu();
+										
 
 									}
 
@@ -1227,7 +1231,7 @@ int main() {
 										}
 										else {
 											if (pazi == 0) lucky[5] = '1';
-											if (pazi == 1) cout << "ERRORE! " << item[i] << endl;
+											if (pazi == 1) throw "Instruction with sufix B and >255 number ERROR!" + item[i];
 											lucky[5] = '1';
 											lucky += "0000000000";
 											lucky += decToBinary(atoi(s2.c_str()), 2);
@@ -1249,28 +1253,16 @@ int main() {
 											}
 											else if (s3.size() == 3) { // s1 je registar sa h ili l
 
-												if (pazi == 2) cout << "ERRORE! " << item[i] << endl; // ne sme MOVW sa high.low
-												if (atoi(s2.c_str()) > 255) cout << "ERRORE! " << item[i] << endl; // ne sme npr. MOV $2000, %R1 high/low
+												if (pazi == 2) throw "Instruction with sufix W and h/l ERROR!" + item[i]; // ne sme MOVW sa high.low
+												if (atoi(s2.c_str()) > 255) throw "h/l and >255 number ERROR!" + item[i]; // ne sme npr. MOV $2000, %R1 high/low
 
 												lucky += "001";
 
-												if (s3[1] == '0') lucky += "0000";
-												else if (s3[1] == '1') lucky += "0001";
-												else if (s3[1] == '2') lucky += "0010";
-												else if (s3[1] == '3') lucky += "0011";
-												else if (s3[1] == '4') lucky += "0100";
-												else if (s3[1] == '5') lucky += "0101";
-												else if (s3[1] == '6') lucky += "0110";
-												else if (s3[1] == '7') lucky += "0111";
-												else cout << "ERRORE! " << item[i] << endl;
-
-												if (s3[2] == 'h') lucky += "1";
-												else if (s3[2] == 'l') lucky += "0";
-												else cout << "ERRORE! " << item[i] << endl;
+												lucky += getRegKRACI(s3);
 
 											}
 											else {
-												cout << "ERRORE! " << item[i] << endl;
+												throw "Register size over 3 ERROR!" + item[i];
 											}
 
 											LC += (lucky.size() / 8);;
@@ -1288,7 +1280,7 @@ int main() {
 												LC += (lucky.size() / 8);
 												codeC += binary_hexa(lucky);
 											}
-											else cout << "ERRORE! " << item[i] << endl;
+											throw "regind but no % ERROR!" + item[i];
 										}
 										// immed - regindpom/memdir
 										else {
@@ -1313,7 +1305,7 @@ int main() {
 													while (item[i][br] != ')') if (item[i][br] != ' ') s3 += item[i][br++];
 													lucky += getReg(s3);
 												}
-												else cout << "ERRORE! " << item[i] << endl;
+												else throw "regindpom and no % ERROR!" + item[i];
 
 												if (is_number(s4)) {
 													lucky += decToBinary(atoi(s4.c_str()), 2);
@@ -1345,7 +1337,7 @@ int main() {
 										}
 									}
 									else {
-										cout << "ERROR! " << item[i] << endl;
+									throw "Add. type ERROR!" + item[i];
 									}
 								}
 								// REGDIR
@@ -1361,7 +1353,7 @@ int main() {
 
 										lucky += "001";
 
-										if (pazi == 1) cout << "ERROREE! " << item[i] << endl;
+										if (pazi == 1) throw "Instruction with sufix B and regdir ERROR!" + item[i];
 
 										lucky += getReg(s2);
 									}
@@ -1372,12 +1364,12 @@ int main() {
 
 										lucky += "001";
 
-										if (pazi == 2) cout << "ERRORE! " << item[i] << endl;
+										if (pazi == 2) throw "Instruction with sufix W and h/l ERROR!" + item[i];
 
 										lucky += getRegKRACI(s2);
 
 									}
-									else cout << "ERRORE! " << item[i] << endl;
+									else throw "reg over 3 size ERROR!" + item[i];
 
 									while (item[i][br] == ' ' || item[i][br] == ',') br++;
 
@@ -1388,9 +1380,9 @@ int main() {
 
 										if (s3.size() == 2) {
 
-											if (pazi == 1 && s1 == "MOV") cout << "ERRORE! " << item[i] << endl;
-											if (s2.size() == 3 && s1 == "MOV") cout << "ERRORE! " << item[i] << endl;
-											if (pazi == 1 && s2.size() == 3 && s1 == "MOV") cout << "ERRORE! " << item[i] << endl;
+											if (pazi == 1 && s1 == "MOV") throw "ERROR!" + item[i];
+											if (s2.size() == 3 && s1 == "MOV") throw "ERROR!" + item[i];
+											if (pazi == 1 && s2.size() == 3 && s1 == "MOV") throw "ERROR!" + item[i];
 
 											lucky += "001";
 
@@ -1401,8 +1393,8 @@ int main() {
 											lucky += "001";
 											if (pazi == 0 && s2.size() == 2) lucky[5] = '1';
 
-											if (pazi == 2) cout << "ERRORE! " << item[i] << endl;
-											if (pazi == 0 && s2.size() == 2)  cout << "ERRORE! " << item[i] << endl;
+											if (pazi == 2) throw "ERROR!" + item[i];
+											if (pazi == 0 && s2.size() == 2)  throw "ERROR!" + item[i];
 
 											lucky += getRegKRACI(s3);
 										}
@@ -1427,9 +1419,9 @@ int main() {
 											if (s3.size() == 2) {
 												lucky += getReg(s3);
 											}
-											else cout << "ERRORA! " << item[i] << endl;
+											else throw "ERROR!" + item[i];
 										}
-										else cout << "ERRORISMO! " << item[i] << endl;
+										else throw "ERROR!" + item[i];
 
 										LC += lucky.size() / 8;
 										codeC += binary_hexa(lucky);
@@ -1460,7 +1452,7 @@ int main() {
 												while (item[i][br] != ')') if (item[i][br] != ' ') s3 += item[i][br++];
 												lucky += getReg(s3);
 											}
-											else cout << "ERRORETRA! " << item[i] << endl;
+											else throw "ERROR!" + item[i];
 
 											if (is_number(s4)) {
 												lucky += decToBinary(atoi(s4.c_str()), 2);
@@ -1511,12 +1503,12 @@ int main() {
 
 										if (s2.size() == 2)
 											lucky += getReg(s2);
-										else cout << "ERRUFL! " << item[i] << endl;
+										else throw "ERROR!" + item[i];
 
 										while (item[i][br] == ' ') br++;
 
 										if (item[i][br] == ',') br++;
-										else cout << "ERONDOFIL" << endl;
+										else throw "ERROR!" + item[i];
 
 										while (item[i][br] == ' ') br++;
 
@@ -1532,13 +1524,13 @@ int main() {
 
 												if (pazi == 0) lucky[5] = '1';
 
-												if (pazi == 1) cout << "ERRORUROS! " << item[i] << endl;
+												if (pazi == 1) throw "ERROR!" + item[i];
 
 												lucky += getReg(s3);
 											}
 											else if (s3.size() == 3) {
 
-												if (pazi == 2) cout << "ERRORUROSS! " << item[i] << endl;
+												if (pazi == 2) throw "ERROR!" + item[i];
 
 												lucky += getRegKRACI(s3);
 											}
@@ -1562,9 +1554,9 @@ int main() {
 												if (s3.size() == 2) {
 													lucky += getReg(s3);
 												}
-												else cout << "ERRUFLIO! " << item[i] << endl;
+												else throw "ERROR!" + item[i];
 											}
-											else cout << "ERRURRR! " << item[i] << endl;
+											else throw "ERROR!" + item[i];
 
 											LC += lucky.size() / 8;
 											codeC += binary_hexa(lucky);
@@ -1597,7 +1589,7 @@ int main() {
 
 													lucky += getReg(s3);
 												}
-												else cout << "ERRORETRA! " << item[i] << endl;
+												else throw "ERROR!" + item[i];
 
 												if (is_number(s4)) {
 													lucky += decToBinary(atoi(s4.c_str()), 2);
@@ -1661,7 +1653,7 @@ int main() {
 
 											lucky += getReg(s2);
 										}
-										else cout << "ERRORETRA! " << item[i] << endl;
+										else throw "ERROR!" + item[i];
 
 										int SPECIJALNI_FLAG = 0;
 										if (s2 == "PC" || s2 == "pc" || s2 == "R7" || s2 == "r7") SPECIJALNI_FLAG = 1;
@@ -1699,13 +1691,13 @@ int main() {
 
 													if (pazi == 0) lucky[5] = '1';
 
-													if (pazi == 1) cout << "ERRORUROS! " << item[i] << endl;
+													if (pazi == 1) throw "ERROR!" + item[i];
 
 													lucky += getReg(s3);
 												}
 												else if (s3.size() == 3) {
 
-													if (pazi == 2) cout << "ERRORUROSS! " << item[i] << endl;
+													if (pazi == 2) throw "ERROR!" + item[i];
 
 													lucky += getRegKRACI(s3);
 												}
@@ -1735,9 +1727,9 @@ int main() {
 													if (s3.size() == 2) {
 														lucky += getReg(s3);
 													}
-													else cout << "ERRUFLIO! " << item[i] << endl;
+													else throw "ERROR!" + item[i];
 												}
-												else cout << "ERRURRR! " << item[i] << endl;
+												else throw "ERROR!" + item[i];
 
 												LC += lucky.size() / 8;
 												codeC += binary_hexa(lucky);
@@ -1785,7 +1777,7 @@ int main() {
 
 														lucky += getReg(s3);
 													}
-													else cout << "ERRORETRA! " << item[i] << endl;
+													else throw "ERROR!" + item[i];
 
 													if (is_number(s4)) {
 														lucky += decToBinary(atoi(s4.c_str()), 2);
@@ -1826,7 +1818,7 @@ int main() {
 												codeC += binary_hexa(lucky);
 											}
 										}
-										else cout << "ERRDUCATI! " << item[i] << endl;
+										else throw "ERROR!" + item[i];
 
 
 									}
@@ -1861,17 +1853,17 @@ int main() {
 
 												if (pazi == 0) lucky[5] = '1';
 
-												if (pazi == 1) cout << "ERRORUROS! " << item[i] << endl;
+												if (pazi == 1) throw "ERROR!" + item[i];
 
 												lucky += getReg(s3);
 											}
 											else if (s3.size() == 3) {
 
-												if (pazi == 2) cout << "ERRORUROSS! " << item[i] << endl;
+												if (pazi == 2) throw "ERROR!" + item[i];
 
 												lucky += getRegKRACI(s3);
 											}
-											else cout << "ERROTROFIL! " << item[i] << endl;
+											else throw "ERROR!" + item[i];
 
 											LC += lucky.size() / 8;
 											codeC += binary_hexa(lucky);
@@ -1894,9 +1886,9 @@ int main() {
 												if (s3.size() == 2) {
 													lucky += getReg(s3);
 												}
-												else cout << "ERRUFLIO! " << item[i] << endl;
+												else throw "ERROR!" + item[i];
 											}
-											else cout << "ERRURRR! " << item[i] << endl;
+											else throw "ERROR!" + item[i];
 
 											LC += lucky.size() / 8;
 											codeC += binary_hexa(lucky);
@@ -1928,7 +1920,7 @@ int main() {
 
 													lucky += getReg(s3);
 												}
-												else cout << "ERRORETRA! " << item[i] << endl;
+												else throw "ERROR!" + item[i];
 
 												if (is_number(s5)) {
 													lucky += decToBinary(atoi(s5.c_str()), 2);
@@ -2158,7 +2150,31 @@ int main() {
 			}
 		}
 
-		for (Equ_Table* tek = prviE; tek != nullptr;) {
+		
+		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
+			string* s1 = tek->getNizBukvalno();
+			int size1 = tek->getNizSize();
+			for (int i = 0; i < size1; i++) {
+				if (is_number(s1[i])==false) {
+					for (Equ_Table* tek2 = prviE; tek2 != nullptr; tek2 = tek2->next) {
+						if (tek2 != tek) {
+							if (tek2->getSymbol() == s1[i]) {
+								string* s2 = tek2->getNizBukvalno();
+								int size2 = tek2->getNizSize();
+								for (int j = 0; j < size2; j++) {
+									if (s2[j] == tek->getSymbol()) {
+										//cout<< "ERROR! "<<tek->getSymbol()<<" "<<tek2->getSymbol()<<endl;
+										throw "ERROR! " + tek->getSymbol() + " " + tek2->getSymbol();
+									}
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+
+		/*for (Equ_Table* tek = prviE; tek != nullptr;) {
 			string* s1 = tek->getNizBukvalno();
 			string *s2 = tek->getZnaciBukvalno();
 			int vr = 0;
@@ -2217,6 +2233,11 @@ int main() {
 							delete tek3;
 							break;
 						}
+						else{
+							last3->next = tek3->next;
+							delete tek3;
+							break;
+						}
 					}
 					else {
 						last3 = tek3;
@@ -2229,7 +2250,7 @@ int main() {
 			}
 
 
-		}
+		}*/
 
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next)
 			cout << tek->getSymbol() << " | " << tek->getNiz() << " | " << tek->getZnaci() << endl;

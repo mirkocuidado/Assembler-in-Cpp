@@ -1,0 +1,46 @@
+﻿  Main.cpp
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(10): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\symbol_table.h(6): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\for_table.h(3): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\for_table.h(4): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(11): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(12): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\reloc_table.h(3): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\reloc_table.h(4): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(13): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\equ_table.h(3): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\equ_table.h(4): warning C4067: unexpected tokens following preprocessor directive - expected a newline
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1077): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1108): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1130): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1192): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1268): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1280): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1296): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1335): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1402): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1426): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1440): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1484): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1538): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1561): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1576): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1621): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1705): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1734): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1749): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1817): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1868): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1893): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1907): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1954): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1987): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1995): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(2015): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(2030): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(2057): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(2069): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(2093): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(2101): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(103): warning C4715: 'decToBinary': not all control paths return a value
+  sistemski.vcxproj -> C:\Users\HP\Desktop\sistemski\x64\Debug\sistemski.exe
