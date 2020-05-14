@@ -6,6 +6,7 @@
 #include <string.h>
 #include <sstream>
 #include <exception>
+#include <vector>
 
 #include "Symbol_Table.h";
 #include "For_Table.h";
@@ -196,6 +197,31 @@ void addF(int p, string s, int sn, string sek, char ss = ' ') {
 		poslF->next = new For_Table(p, s, sn, sek, ss);
 		poslF = poslF->next;
 	}
+}
+
+bool circle() {
+	for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
+		vector<string> s1 = tek->getNizBukvalno();
+		for (int i = 0; i < s1.size(); i++) {
+			if (is_number(s1[i]) == false) {
+				for (Equ_Table* tek2 = prviE; tek2 != nullptr; tek2 = tek2->next) {
+					if (tek2 != tek) {
+						if (tek2->getSymbol() == s1[i]) {
+							vector<string> s2 = tek2->getNizBukvalno();
+							int size2 = tek2->getNizSize();
+							for (int j = 0; j < size2; j++) {
+								if (s2[j] == tek->getSymbol()) {
+									//cout<< "ERROR! "<<tek->getSymbol()<<" "<<tek2->getSymbol()<<endl;
+									return true;
+								}
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+	return false;
 }
 
 int main(int argc, char* argv[]) {
@@ -1348,7 +1374,7 @@ int main(int argc, char* argv[]) {
 									br++; //preskoci ,
 
 									if (s2.size() == 2) {
-										if (pazi == 2) lucky += "100";
+										if (pazi == 2 || pazi==0) lucky += "100";
 										else lucky += "000";
 
 										lucky += "001";
@@ -2119,52 +2145,45 @@ int main(int argc, char* argv[]) {
 
 		cout << endl;
 
+		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next)
+			cout << tek->getSymbol() << " | " << tek->getNiz() << " | " << tek->getZnaci() << endl;
+
+		cout << endl;
+
+		// PROVERA KRUZNE ZAVISNOSTI I ZAMENA VREDNOSTI ZA EQU!
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
-			string* s1 = tek->getNizBukvalno();
-			string *s2 = tek->getZnaciBukvalno();
+			string symbol = tek->getSymbol();
+			vector<string> sMain1 = tek->getNizBukvalno();
+			vector<string> sMain2 = tek->getZnaciBukvalno();
+			if (circle() == true) throw "CIRCLE ERROR!";
+			else {
+				for (Equ_Table* tek2 = prviE; tek2 != nullptr; tek2 = tek2->next) {
+					if (tek2 != tek) {
+						vector<string> s1 = tek2->getNizBukvalno();
+						vector<string> s2 = tek2->getZnaciBukvalno();
 
-			int s3[50];
-			for (int i = 0; i < 50; i++)
-				s3[i] = 0;
+						for (int i = 0; i < s1.size(); i++) {
+							if (s1[i] == symbol) {
+								int flegZaMinusIspredZagrade = 0;
+								if (s2[i] == "-") { flegZaMinusIspredZagrade = 1; }
 
-			int vrednost = 0;
-			for (int i = 0; i < tek->getNizSize(); i++) {
-				Symbol_Table* pom = isInSymbol_Table(s1[i]);
+								tek2->loseSymbol(i);
+								tek2->loseZnak(i);
 
-				if (pom != nullptr)
-					if (s2[i] == "-") {
-						s3[pom->getSection()] -= pom->getSection();
-					}
-					else s3[pom->getSection()] += pom->getSection();
-			}
+								for (int j = 0; j < sMain1.size(); j++) {
+									tek2->setSymbol(sMain1[j], i);
 
-			for (int i = 0; i < 50; i++)
-				if (s3[i] != i && s3[i] != 0 && s3[i] != -i) cout << "ERROR!" << endl;
-
-			for (int i = 0; i < tek->getNizSize(); i++) {
-				if (is_number(s1[i]) == false) {
-					Symbol_Table * pom = isInSymbol_Table(s1[i]);
-					if (pom != nullptr && pom->getEqu() == false) { int n = pom->getValue(); string s = to_string(n);  tek->setSymbol(s, i); }
-					else tek->setSymbol(s1[i], i);
-				}
-			}
-		}
-
-		
-		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
-			string* s1 = tek->getNizBukvalno();
-			int size1 = tek->getNizSize();
-			for (int i = 0; i < size1; i++) {
-				if (is_number(s1[i])==false) {
-					for (Equ_Table* tek2 = prviE; tek2 != nullptr; tek2 = tek2->next) {
-						if (tek2 != tek) {
-							if (tek2->getSymbol() == s1[i]) {
-								string* s2 = tek2->getNizBukvalno();
-								int size2 = tek2->getNizSize();
-								for (int j = 0; j < size2; j++) {
-									if (s2[j] == tek->getSymbol()) {
-										//cout<< "ERROR! "<<tek->getSymbol()<<" "<<tek2->getSymbol()<<endl;
-										throw "ERROR! " + tek->getSymbol() + " " + tek2->getSymbol();
+									if (sMain2[j] == "+") {
+										if (flegZaMinusIspredZagrade == 1) {
+											tek2->setZnak("-", i);
+										}
+										else tek2->setZnak("+", i);
+									}
+									else if (sMain2[j] == "-") {
+										if (flegZaMinusIspredZagrade == 1) {
+											tek2->setZnak("+", i);
+										}
+										else tek2->setZnak("-", i);
 									}
 								}
 							}
@@ -2174,9 +2193,61 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		/*for (Equ_Table* tek = prviE; tek != nullptr;) {
-			string* s1 = tek->getNizBukvalno();
-			string *s2 = tek->getZnaciBukvalno();
+		//PROVERA INDEKSA KLASIFIKACIJE
+		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
+			vector<string> s1 = tek->getNizBukvalno();
+			vector<string> s2 = tek->getZnaciBukvalno();
+
+			vector<int> s3;
+			for (int i = 0; i < 50; i++)
+				s3.push_back(0);
+
+			int vrednost = 0;
+			for (int i = 0; i < s1.size(); i++) {
+				Symbol_Table* pom = isInSymbol_Table(s1[i]);
+
+				if (pom != nullptr) {
+					if (s2[i] == "-") {
+						s3[pom->getSection()] -= 1;
+					}
+					else s3[pom->getSection()] += 1;
+				}
+			}
+
+			bool doublee = false;
+			for (int i = 0; i < 50; i++) {
+				if (s3[i] != 0) {
+					if (doublee == false) doublee = true;
+					else throw "ERROR EQU!";
+				}
+				if (s3[i] != 1 && s3[i] != 0 && s3[i] != -1) throw "ERROR EQU!";
+			}
+		}
+
+	/*
+			for (int i = 0; i < tek->getNizSize(); i++) {
+				if (is_number(s1[i]) == false) {
+					Symbol_Table * pom = isInSymbol_Table(s1[i]);
+					if (pom != nullptr && pom->getEqu() == false) {
+						if (pom->getlg() == 'g' && pom->getSection() == 0) {
+							tek->setSymbol(s1[i], i);
+						}
+						else {
+							int n = pom->getValue();
+							string s = to_string(n);
+							tek->setSymbol(s, i);
+						}
+					}
+					else tek->setSymbol(s1[i], i);
+				}
+			}
+		}
+
+		
+
+		for (Equ_Table* tek = prviE; tek != nullptr;) {
+			vector<string> s1 = tek->getNizBukvalno();
+			vector<string> s2 = tek->getZnaciBukvalno();
 			int vr = 0;
 
 			int skroz = 0;
@@ -2207,7 +2278,7 @@ int main(int argc, char* argv[]) {
 
 				for (Equ_Table* tek2 = prviE; tek2 != nullptr; tek2 = tek2->next) {
 					if (tek2 != tek) {
-						string* s1 = tek2->getNizBukvalno();
+						vector<string> s1 = tek2->getNizBukvalno();
 						for (int i = 0; i < tek2->getNizSize(); i++) {
 							if (s1[i] == tek->getSymbol()) {
 								int n = pom->getValue();
@@ -2252,6 +2323,9 @@ int main(int argc, char* argv[]) {
 
 		}*/
 
+		
+	
+		// ISPIS EQU
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next)
 			cout << tek->getSymbol() << " | " << tek->getNiz() << " | " << tek->getZnaci() << endl;
 
@@ -2346,7 +2420,7 @@ int main(int argc, char* argv[]) {
 		inFile.close();
 	
 	}
-	catch (string m) {
+	catch (const char* m) {
 		cout << m << endl;
 	}
 	system("pause");

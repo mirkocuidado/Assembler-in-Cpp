@@ -2,6 +2,7 @@
 
 #include <string>;
 #include <iostream>;
+#include <vector>;
 
 using namespace std;
 
@@ -10,65 +11,71 @@ class Equ_Table
 
 private:
 	string symbol;
-	string* niz;
-	string *znaci;
+	vector<string> niz;
+	vector<string> znaci;
 	int size;
 	int size2;
 
 public:
 	Equ_Table* next;
+	int brojcanik;
 
 	Equ_Table(string s, int br, string* ss, int br2, string * sz) {
 		symbol = s;
 		size = br;
 		size2 = br2;
+		brojcanik = 0;
 
-		niz = new string[br];
 		for (int i = 0; i < br; i++)
-			niz[i] = ss[i];
+			niz.push_back(ss[i]);
 
-
-		znaci = new string[br];
 		if (br > br2) {
 			size2 = br;
-			znaci[0] = '+';
-			for (int i = 1; i < br2 + 1; i++)
-				znaci[i] = sz[i - 1];
+			znaci.push_back("+");
+			for (int i = 0; i < br2; i++)
+				znaci.push_back(sz[i]);
 		}
 		else {
 			for (int i = 0; i < br; i++)
-				znaci[i] = sz[i];
+				znaci.push_back(sz[i]);
 		}
 	}
 
 	string getSymbol() { return symbol; }
+
 	string getNiz() {
 		string pom = "";
-		for (int i = 0; i < size; i++)
+		for (int i = 0; i < niz.size(); i++)
 			pom += niz[i] + " ";
 
 		return pom;
 	}
+
 	string getZnaci() {
 		string pom = "";
-		for (int i = 0; i < size; i++)
+		for (int i = 0; i < znaci.size(); i++)
 			pom += znaci[i] + " ";
 
 		return pom;
 	}
 
-	int getNizSize() { return size; }
-	int getZnaciSize() { return size2; }
+	int getNizSize() { return niz.size(); }
+	int getZnaciSize() { return znaci.size(); }
 
-	string* getNizBukvalno() {
+	vector<string> getNizBukvalno() {
 		return niz;
 	}
 
-	string* getZnaciBukvalno() {
+	vector<string> getZnaciBukvalno() {
 		return znaci;
 	}
 
-	void setSymbol(string s, int a) { niz[a] = s; }
+	void setSymbol(string s, int a) { niz.push_back(s);}
+	void setZnak(string s, int a) { znaci.push_back(s); }
+
+	void loseSymbol(int a) { niz.erase(niz.begin() + a);}
+	void loseZnak(int a) {
+		znaci.erase(znaci.begin() + a);}
 
 	~Equ_Table() {}
 };

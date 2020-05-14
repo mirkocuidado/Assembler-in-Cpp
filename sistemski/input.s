@@ -1,6 +1,7 @@
 .section a:
+.extern p
 MOV a,b
-.equ c, 5+10+a-b+t
+.equ c, 5+10+a-b
 d: .equ b,5+10+15
 e: .equ f,-d+e-c
 m: .equ n,-a+b-c+d-e+10
