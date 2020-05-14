@@ -13,24 +13,22 @@ private:
 	string symbol;
 	vector<string> niz;
 	vector<string> znaci;
-	int size;
-	int size2;
+
+	// igranje za indeks klasifikacije
+
+	int indeks_klasifikacije;
+
 
 public:
 	Equ_Table* next;
-	int brojcanik;
 
 	Equ_Table(string s, int br, string* ss, int br2, string * sz) {
 		symbol = s;
-		size = br;
-		size2 = br2;
-		brojcanik = 0;
 
 		for (int i = 0; i < br; i++)
 			niz.push_back(ss[i]);
 
 		if (br > br2) {
-			size2 = br;
 			znaci.push_back("+");
 			for (int i = 0; i < br2; i++)
 				znaci.push_back(sz[i]);
@@ -39,6 +37,9 @@ public:
 			for (int i = 0; i < br; i++)
 				znaci.push_back(sz[i]);
 		}
+
+		indeks_klasifikacije = -1;
+
 	}
 
 	string getSymbol() { return symbol; }
@@ -46,7 +47,7 @@ public:
 	string getNiz() {
 		string pom = "";
 		for (int i = 0; i < niz.size(); i++)
-			pom += niz[i] + " ";
+			pom += niz[i] + " " ;
 
 		return pom;
 	}
@@ -78,4 +79,10 @@ public:
 		znaci.erase(znaci.begin() + a);}
 
 	~Equ_Table() {}
+
+	// igranje za indeks klasifikacije
+
+	void setIK(int a) { indeks_klasifikacije = a; }
+	int getIK() { return indeks_klasifikacije; }
+
 };

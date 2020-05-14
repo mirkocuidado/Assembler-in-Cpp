@@ -1,9 +1,10 @@
 .section a:
 .extern p
+.global m
 MOV a,b
-.equ c, 5+10+a-b
+.equ c, a+5
 d: .equ b,5+10+15
-e: .equ f,-d+e-c
-m: .equ n,-a+b-c+d-e+10
-.equ t, m-n+a-b-c-f+d+e-5
+e: .equ f,p
+m: .equ n,m+10
+.equ t, f
 .end

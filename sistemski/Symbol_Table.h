@@ -21,7 +21,7 @@ private:
 	int codeINDEX;
 
 	bool equ;
-
+	string menjaj_me_linkeru;
 
 public:
 	Symbol_Table* next;
@@ -39,6 +39,7 @@ public:
 		equ = false;
 		next = nullptr;
 		flink = nullptr;
+
 	};
 
 	Symbol_Table(int r, string s, int br, char l, bool d, int v, int ss) {
@@ -53,6 +54,7 @@ public:
 		next = nullptr;
 		flink = nullptr;
 		codeINDEX = 0;
+		menjaj_me_linkeru = "MENJAJ ME";
 	}
 
 	~Symbol_Table();
@@ -65,6 +67,7 @@ public:
 	int getSize() { return size; }
 	int getSection() { return section; }
 	bool getEqu() { return equ; }
+	string getMenjaj_Me_Linekru() { return menjaj_me_linkeru; }
 
 	void setEqu() { equ = true; }
 	void setRbr(int r) { rbr = r; }
@@ -74,6 +77,7 @@ public:
 	void setDefined(bool b) { defined = b; }
 	void setValue(int v) { value = v; }
 	void setSize(int s) { size = s; }
+	void setMenjaj_Me_Linekru(string s) { menjaj_me_linkeru = s; }
 
 	void setCode(string s) {
 		s += " ";

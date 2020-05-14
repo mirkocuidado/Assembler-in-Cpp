@@ -581,17 +581,23 @@ int main(int argc, char* argv[]) {
 									Symbol_Table* pompom = isInSymbol_Table(niz[i]);
 									if (pompom == nullptr) {
 										add(niz[i], 0, 'l', false, 0, 0);
+										posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
 									}
 								}
 							}
 
+							// AKO JE SAMO OD BROJEVA DODAJ/AZURIRAJ VREDNOST U TABELI SIMBOLA I RECI LINKERU DA NE MENJA, A
+							// AKO JE I OD SIMBOLA, ONDA DODAJ NOVI ZAPIS ZA EQU TABELU
 							if (flag == 0) {
-								if (pom == nullptr)
+								if (pom == nullptr) {
 									add(s1, BROJ_SEKCIJE, 'l', true, izraz, 0);
+									posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
+								}
 								else {
 									pom->setDefined(true);
 									pom->setValue(izraz);
 									pom->setSection(BROJ_SEKCIJE);
+									pom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
 								}
 
 								cout << izraz << endl;
@@ -599,8 +605,12 @@ int main(int argc, char* argv[]) {
 							else {
 								if (pom == nullptr) {
 									add(s1, BROJ_SEKCIJE, 'l', false, 0, 0); posl->setEqu();
+									posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
 								}
-								else pom->setEqu();
+								else { 
+									pom->setEqu(); 
+									pom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
+								}
 
 								addE(s1, nizI, niz, nizZ, znak);
 
@@ -956,6 +966,7 @@ int main(int argc, char* argv[]) {
 
 									string pomocni = "";
 
+									//RAZDVAJAM NA NIZ ZNAKOVA I NIZ SIMBOLA
 									for (int i = 0; i < s2.size(); i++) {
 										if (s2[i] != '+' && s2[i] != '-' && s2[i] != '\n') {
 											if (s2[i] != ' ')
@@ -970,13 +981,12 @@ int main(int argc, char* argv[]) {
 											}
 										}
 									}
-
 									niz[nizI++] = pomocni;
 
 									int izraz = 0;
-
 									int flag = 0;
 
+									// RACUNAM DA LI JE NIZ OD BROJEVA SAMO ILI IMA I SIMBOLA
 									for (int i = 0; i < nizI; i++) {
 										if (is_number(niz[i]) == true) {
 											izraz += atoi(niz[i].c_str());
@@ -986,38 +996,45 @@ int main(int argc, char* argv[]) {
 											Symbol_Table* pompom = isInSymbol_Table(niz[i]);
 											if (pompom == nullptr) {
 												add(niz[i], 0, 'l', false, 0, 0);
+												posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
 											}
 										}
 									}
 
-									if (flag == 0) {
-										if (poom == nullptr)
+									// AKO JE SAMO OD BROJEVA DODAJ/AZURIRAJ VREDNOST U TABELI SIMBOLA I RECI LINKERU DA NE MENJA, A
+									// AKO JE I OD SIMBOLA, ONDA DODAJ NOVI ZAPIS ZA EQU TABELU
+
+									if (flag == 0){
+										if (poom == nullptr) {
 											add(s1, BROJ_SEKCIJE, 'l', true, izraz, 0);
+											posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
+										}
 										else {
 											poom->setDefined(true);
 											poom->setValue(izraz);
 											poom->setSection(BROJ_SEKCIJE);
+											poom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
 										}
 
 										cout << izraz << endl;
 									}
 									else {
-										if (poom == nullptr) { add(s1, BROJ_SEKCIJE, 'l', false, 0, 0); posl->setEqu(); }
-										else poom->setEqu();
+										if (poom == nullptr) { 
+											add(s1, BROJ_SEKCIJE, 'l', false, 0, 0); 
+											posl->setEqu(); 
+											posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
+										}
+										else { 
+											poom->setEqu();
+											poom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
+										}
 
 										addE(s1, nizI, niz, nizZ, znak);
-										
-
 									}
 
 									izraz = 0;
 									nizI = 0;
 									nizZ = 0;
-									/*cout << "EEE" << endl;
-									for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next)
-										cout << tek->getSymbol() << " " << tek->getNiz() << endl;
-									cout << "FFF" << endl;*/
-
 								}
 							}
 						}
@@ -2193,7 +2210,7 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		//PROVERA INDEKSA KLASIFIKACIJE
+		//PROVERA INDEKSA KLASIFIKACIJE I BELEZENJE ZA KOJU SEKCIJU TREBA ICI RELOKACIONI
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			vector<string> s1 = tek->getNizBukvalno();
 			vector<string> s2 = tek->getZnaciBukvalno();
@@ -2207,10 +2224,13 @@ int main(int argc, char* argv[]) {
 				Symbol_Table* pom = isInSymbol_Table(s1[i]);
 
 				if (pom != nullptr) {
-					if (s2[i] == "-") {
-						s3[pom->getSection()] -= 1;
+					if (pom->getSection() == 0) {
+						s3[0] += 1;
 					}
-					else s3[pom->getSection()] += 1;
+					else {
+						if (s2[i] == "-") s3[pom->getSection()] -= 1;
+						else s3[pom->getSection()] += 1;
+					}
 				}
 			}
 
@@ -2218,11 +2238,60 @@ int main(int argc, char* argv[]) {
 			for (int i = 0; i < 50; i++) {
 				if (s3[i] != 0) {
 					if (doublee == false) doublee = true;
-					else throw "ERROR EQU!";
+					else throw "ERROR EQU 1!";
+
+					tek->setIK(i);
 				}
-				if (s3[i] != 1 && s3[i] != 0 && s3[i] != -1) throw "ERROR EQU!";
+				if (s3[i] != 1 && s3[i] != 0) throw "ERROR EQU 2!";
 			}
 		}
+
+		/* UBACIVANJE VREDNOSTI I RACUNANJE VREDNOSTI SIMBOLA I PRAVLJENJE ZAPISA
+		   indeks_klasifikacije == 0 => simbol je extern => relokacioni ide ka njemu => u kod 0
+		   indeks_klasifikacije == 1 => simbol je global/local => relokacioni ka sekciji => u kod njegova vrednost */
+		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
+			vector<string> s1 = tek->getNizBukvalno();
+			vector<string> s2 = tek->getZnaciBukvalno();
+			int ulaz_za_simbol = isInSymbol_Table(tek->getSymbol())->getRbr();
+
+			int vrednost = 0;
+			for (int i = 0; i < s1.size(); i++) {
+				Symbol_Table* pom = isInSymbol_Table(s1[i]);
+
+				if ( is_number(s1[i].c_str()) == false ) {
+					int v = pom->getValue();
+					int sekcija = pom->getSection();
+
+					if (s2[i] == "-") {
+						vrednost -= v;
+					}
+					else {
+						vrednost += v;
+					}
+
+					if (sekcija == 0) {
+						addR(pom->getRbr(), ulaz_za_simbol, "EQU_REL_EXTERN");
+					}
+				}
+				else {
+					int v = atoi(s1[i].c_str());
+
+					if (s2[i] == "-") {
+						vrednost -= v;
+					}
+					else {
+						vrednost += v;
+					}
+				}
+			}
+
+			if (tek->getIK() != 0 && tek->getIK()!= -1) {
+				addR(tek->getIK(), ulaz_za_simbol, "EQU_REL");
+			}
+
+			isInSymbol_Table(tek->getSymbol())->setValue(vrednost);
+		}
+
 
 	/*
 			for (int i = 0; i < tek->getNizSize(); i++) {
@@ -2324,20 +2393,22 @@ int main(int argc, char* argv[]) {
 		}*/
 
 		
-	
+		
 		// ISPIS EQU
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next)
-			cout << tek->getSymbol() << " | " << tek->getNiz() << " | " << tek->getZnaci() << endl;
+			cout << tek->getSymbol() << " | " << tek->getNiz() << " | " << tek->getZnaci() << " | " << tek->getIK() << endl;
 
 		cout << endl;
 
 		for (Symbol_Table*tek = prvi; tek != nullptr; tek = tek->next) {
 			if (tek->getlg() == 'l' && tek->getSection() == 0 && tek->getName() != "UND") cout << "ERROR! LOCAL AND UNDEFINED! " << endl;
 			cout << tek->getRbr() << " | " << tek->getSection() << " | " << tek->getlg() << " | " << tek->getDefined() << " | " << tek->getValue() << " | " <<
-				tek->getSize() << " | " << tek->getName() << " | " << tek->getEqu() << endl;
+				tek->getSize() << " | " << tek->getName() << " | " << tek->getEqu() << " | " << tek->getMenjaj_Me_Linekru() << endl;
 		}
 		cout << endl;
 
+		cout << "REDNI BROJ | SIMBOL/SEKCIJA | ZA KOJI SIMBOL JE VEZANO | NACIN ADRESIRANJA haha"<<endl;
+		cout << endl;
 		for (Reloc_Table* tek = prviR; tek != nullptr; tek = tek->next) {
 			cout << tek->getRbr() << " | " << tek->getSym() << " | " << tek->getAdress() << " | " << tek->getWay() << endl;
 		}
