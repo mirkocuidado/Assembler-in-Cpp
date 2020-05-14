@@ -237,6 +237,8 @@ int main(int argc, char* argv[]) {
 			exit(1);
 		}
 
+		vector<string> globalni;
+
 		string item[100] = {};
 		string pom;
 		int i = 0;
@@ -281,6 +283,7 @@ int main(int argc, char* argv[]) {
 		regex equ("equ");
 
 		for (int i = 0; i < br; i++) {
+			if (item[i] == "\n") continue;
 			if (item[i][0] == '.') {
 				if (regex_match(item[i], end)) {
 					Symbol_Table* sec = isInSymbol_Table(SEKCIJA);
@@ -481,13 +484,17 @@ int main(int argc, char* argv[]) {
 							string s1 = "";
 							while (item[i][br] != '\n') {
 								while (item[i][br] != ',' && item[i][br] != ' ' && item[i][br] != '\n') {
-									s1 += item[i][br];
+									if(item[i][br]!=' ')
+										s1 += item[i][br];
 									br++;
 								}
 								if (item[i][br] != '\n')
 									br++;
 
 								if(is_number(s1)==true) throw ".global + number ERROR " + item[i];
+
+								if(s1!="")
+									globalni.push_back(s1);
 
 								if (s1 != "") {
 									Symbol_Table* pom = isInSymbol_Table(s1);
@@ -507,6 +514,7 @@ int main(int argc, char* argv[]) {
 							string s1 = "";
 							while (item[i][br] != '\n') {
 								while (item[i][br] != ',' && item[i][br] != ' ' && item[i][br] != '\n') {
+									if (item[i][br] != ' ')
 									s1 += item[i][br];
 									br++;
 								}
@@ -598,18 +606,21 @@ int main(int argc, char* argv[]) {
 									pom->setValue(izraz);
 									pom->setSection(BROJ_SEKCIJE);
 									pom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
+									
 								}
 
+								addE(s1, nizI, niz, nizZ, znak);
 								cout << izraz << endl;
 							}
 							else {
 								if (pom == nullptr) {
-									add(s1, BROJ_SEKCIJE, 'l', false, 0, 0); posl->setEqu();
+									add(s1, BROJ_SEKCIJE, 'l', true, 0, 0); posl->setEqu();
 									posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
 								}
 								else { 
-									pom->setEqu(); 
+									//pom->setEqu(); NE TREBA OVO JA MSM
 									pom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
+									pom->setDefined(true);
 								}
 
 								addE(s1, nizI, niz, nizZ, znak);
@@ -619,14 +630,6 @@ int main(int argc, char* argv[]) {
 							izraz = 0;
 							nizI = 0;
 							nizZ = 0;
-
-							/*cout << "EEE" << endl;
-							for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next)
-								cout << tek->getSymbol() << " " << tek->getNiz() << endl;
-							cout << "FFF" << endl;
-
-							cout << s1 << " = ";
-							cout << s2 << endl;*/
 
 						}
 					}
@@ -897,13 +900,17 @@ int main(int argc, char* argv[]) {
 									string s1 = "";
 									while (pom[br] != '\n') {
 										while (pom[br] != ',' && pom[br] != ' ' && pom[br] != '\n') {
-											s1 += pom[br];
+											if (item[i][br] != ' ')
+												s1 += pom[br];
 											br++;
 										}
 										if (pom[br] != '\n')
 											br++;
 
 										if (is_number(s1) == true) throw ".global + number ERROR " + item[i];
+										
+										if(s1!="")
+											globalni.push_back(s1);
 
 										if (s1 != "") {
 											Symbol_Table* pom = isInSymbol_Table(s1);
@@ -923,7 +930,8 @@ int main(int argc, char* argv[]) {
 									string s1 = "";
 									while (pom[br] != '\n') {
 										while (pom[br] != ',' && pom[br] != ' ' && pom[br] != '\n') {
-											s1 += pom[br];
+											if (item[i][br] != ' ')
+												s1 += pom[br];
 											br++;
 										}
 										if (pom[br] != '\n')
@@ -974,7 +982,7 @@ int main(int argc, char* argv[]) {
 										}
 										else {
 											znak[nizZ++] = s2[i];
-											if (pomocni == "" && i != 0) cout << "GRESKA!" << endl;
+											if (pomocni == "" && i != 0) throw "GRESKA!";
 											else if (pomocni != "") {
 												niz[nizI++] = pomocni;
 												pomocni = "";
@@ -1008,6 +1016,7 @@ int main(int argc, char* argv[]) {
 										if (poom == nullptr) {
 											add(s1, BROJ_SEKCIJE, 'l', true, izraz, 0);
 											posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
+											addE(s1, nizI, niz, nizZ, znak);
 										}
 										else {
 											poom->setDefined(true);
@@ -1020,13 +1029,14 @@ int main(int argc, char* argv[]) {
 									}
 									else {
 										if (poom == nullptr) { 
-											add(s1, BROJ_SEKCIJE, 'l', false, 0, 0); 
-											posl->setEqu(); 
+											add(s1, BROJ_SEKCIJE, 'l', true, 0, 0);
+											//posl->setEqu(); NE TREBA OVO JA MSM
 											posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
 										}
 										else { 
-											poom->setEqu();
+											//poom->setEqu(); NE TREBA OVO JA MSM
 											poom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
+											poom->setDefined(true);
 										}
 
 										addE(s1, nizI, niz, nizZ, znak);
@@ -1290,6 +1300,7 @@ int main(int argc, char* argv[]) {
 												if (s1 == "MOV" && s3.size() == 2 && atoi(s2.c_str()) < 255)
 													lucky += decToBinary(atoi(s2.c_str()), 2);
 
+												lucky[5] = '1';
 
 												lucky += "001";
 												lucky += getReg(s3);
@@ -2160,8 +2171,6 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		cout << endl;
-
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next)
 			cout << tek->getSymbol() << " | " << tek->getNiz() << " | " << tek->getZnaci() << endl;
 
@@ -2291,109 +2300,13 @@ int main(int argc, char* argv[]) {
 
 			isInSymbol_Table(tek->getSymbol())->setValue(vrednost);
 		}
-
-
-	/*
-			for (int i = 0; i < tek->getNizSize(); i++) {
-				if (is_number(s1[i]) == false) {
-					Symbol_Table * pom = isInSymbol_Table(s1[i]);
-					if (pom != nullptr && pom->getEqu() == false) {
-						if (pom->getlg() == 'g' && pom->getSection() == 0) {
-							tek->setSymbol(s1[i], i);
-						}
-						else {
-							int n = pom->getValue();
-							string s = to_string(n);
-							tek->setSymbol(s, i);
-						}
-					}
-					else tek->setSymbol(s1[i], i);
-				}
-			}
+		
+		for (int i = 0; i < globalni.size(); i++) {
+			Symbol_Table* pom = isInSymbol_Table(globalni[i]);
+			if (pom->getDefined() == false)
+				throw "ERROR! CAN'T BE LIKE THIS!";
 		}
 
-		
-
-		for (Equ_Table* tek = prviE; tek != nullptr;) {
-			vector<string> s1 = tek->getNizBukvalno();
-			vector<string> s2 = tek->getZnaciBukvalno();
-			int vr = 0;
-
-			int skroz = 0;
-			for (int i = 0; i < tek->getNizSize(); i++) {
-				string pomocSvima = s1[i];
-				string pomocSvima2 = "";
-
-				if (pomocSvima[0] == '-') {
-					for (int i = 1; i < pomocSvima.size(); i++)
-						pomocSvima2 += pomocSvima[i];
-				}
-				else pomocSvima2 = pomocSvima;
-
-				if (is_number(pomocSvima2) == true) {
-					if(s2[i]=="-")
-						vr -= atoi(pomocSvima.c_str());
-					else vr += atoi(pomocSvima.c_str());
-				}
-				else {
-					skroz = 1;
-					break;
-				}
-			}
-
-			if (skroz == 0) {
-				Symbol_Table * pom = isInSymbol_Table(tek->getSymbol());
-				pom->setValue(vr);
-
-				for (Equ_Table* tek2 = prviE; tek2 != nullptr; tek2 = tek2->next) {
-					if (tek2 != tek) {
-						vector<string> s1 = tek2->getNizBukvalno();
-						for (int i = 0; i < tek2->getNizSize(); i++) {
-							if (s1[i] == tek->getSymbol()) {
-								int n = pom->getValue();
-								string s = to_string(n);
-								tek2->setSymbol(s, i);
-							}
-						}
-					}
-				}
-
-				for (Equ_Table* tek3 = prviE; tek3 != nullptr; tek3 = tek3->next) {
-					Equ_Table* last3=nullptr;
-					if (tek3->getSymbol() == tek->getSymbol()) {
-						if (last3 == nullptr) {
-							prviE = prviE->next;
-							tek = tek->next;
-							delete tek3;
-							break;
-						}
-						else if (tek3->next == nullptr) {
-							poslE = last3;
-							tek = tek->next;
-							delete tek3;
-							break;
-						}
-						else{
-							last3->next = tek3->next;
-							delete tek3;
-							break;
-						}
-					}
-					else {
-						last3 = tek3;
-						tek3 = tek3->next;
-					}
-				}
-			}
-			else {
-				tek = tek->next;
-			}
-
-
-		}*/
-
-		
-		
 		// ISPIS EQU
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next)
 			cout << tek->getSymbol() << " | " << tek->getNiz() << " | " << tek->getZnaci() << " | " << tek->getIK() << endl;
@@ -2492,6 +2405,9 @@ int main(int argc, char* argv[]) {
 	
 	}
 	catch (const char* m) {
+		cout << m << endl;
+	}
+	catch (string m) {
 		cout << m << endl;
 	}
 	system("pause");
