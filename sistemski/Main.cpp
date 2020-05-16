@@ -224,6 +224,9 @@ bool circle() {
 	return false;
 }
 
+void obrada(int i, int br) {
+
+}
 int main(int argc, char* argv[]) {
 
 	try{
@@ -238,8 +241,9 @@ int main(int argc, char* argv[]) {
 		}
 
 		vector<string> globalni;
+		vector<string> eksterni;
 
-		string item[100] = {};
+		vector<string> item;
 		string pom;
 		int i = 0;
 
@@ -251,6 +255,8 @@ int main(int argc, char* argv[]) {
 
 		string LABELA = "";
 
+		bool bilo_end = false;
+
 		string niz[50];
 		string znak[50];
 		int nizI = 0;
@@ -258,13 +264,13 @@ int main(int argc, char* argv[]) {
 
 		while (getline(inFile, pom)) {
 			if (pom != "") {
-				item[i++] = pom;
+				item.push_back(pom);
 			}
 		}
 
-		int br = i;
+		int br = item.size();
 
-		for (int i = 0; i < br; i++) {
+		for (int i = 0; i < item.size(); i++) {
 			item[i] = lose_extra_white_space(item[i]);
 		}
 
@@ -281,11 +287,16 @@ int main(int argc, char* argv[]) {
 		regex REGglobal("global");
 		regex REGextern("extern");
 		regex equ("equ");
+		regex numberr("^(\\+|-)?[0-9]+$");
 
 		for (int i = 0; i < br; i++) {
 			if (item[i] == "\n") continue;
+
 			if (item[i][0] == '.') {
+				obrada(i, 0);
+
 				if (regex_match(item[i], end)) {
+					bilo_end = true;
 					Symbol_Table* sec = isInSymbol_Table(SEKCIJA);
 					if (sec != nullptr) {
 						sec->setSize(LC);
@@ -306,12 +317,13 @@ int main(int argc, char* argv[]) {
 						posleTacke += item[i][br];
 						br++;
 					}
-
-					br++; // preskoci ' '
+					while(item[i][br]==' ')
+						br++; // preskoci ' '
 
 					if (posleTacke == "section") {
 						string s1 = "";
 						while (item[i][br] != ':') {
+							if (item[i][br] == ' ') throw "SECTION MUST BE ONE WORD!";
 							s1 += item[i][br];
 							br++;
 						}
@@ -335,6 +347,7 @@ int main(int argc, char* argv[]) {
 						SEKCIJA = s1;
 						Symbol_Table* sec = isInSymbol_Table(SEKCIJA);
 						if (sec != nullptr) {
+							if (sec->getRbr() != sec->getSection()) throw "THERE IS A SYMBOL OF THIS NAME!";
 							LC = sec->getSize();
 							BROJ_SEKCIJE = sec->getRbr();
 							codeC = "";
@@ -356,19 +369,28 @@ int main(int argc, char* argv[]) {
 					}
 					else {
 						if (regex_match(posleTacke, byte)) {
+
+							if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION!";
+
 							string s1 = "";
 							while (item[i][br] != '\n') {
-								while (item[i][br] != ',' && item[i][br] != ' ' && item[i][br] != '\n') {
+								while (item[i][br] == ' ') br++;
+								while (item[i][br] != ',' && item[i][br] != '\n') {
+									if (s1 != "" && item[i][br]==' ') {
+										while (item[i][br] == ' ' ) br++;
+										if (item[i][br] == ',' || item[i][br]=='\n') break;
+										else throw "ERROR!";
+									}
 									s1 += item[i][br];
 									br++;
 								}
+
 								if (item[i][br] != '\n')
 									br++;
-								// vidi sta ces sa s1
 
 								if (s1 != "") {
-									if (is_number(s1)) {
-										if (atoi(s1.c_str()) > 255) throw "Operand too big! " + item[i];
+									if (regex_match(s1, numberr)) {
+										if (stoi(s1) < -129 || stoi(s1) > 127) throw "ERROR OF SIZE FOR BYTE!";
 										else {
 											string s = decToBinary(atoi(s1.c_str()), 1);
 											codeC += binary_hexa(s);
@@ -405,18 +427,29 @@ int main(int argc, char* argv[]) {
 							}
 						}
 						else if (regex_match(posleTacke, word)) {
+
+							if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION!";
+
 							string s1 = "";
 							while (item[i][br] != '\n') {
-								while (item[i][br] != ',' && item[i][br] != ' ' && item[i][br] != '\n') {
+								while (item[i][br] == ' ') br++;
+								while (item[i][br] != ',' && item[i][br] != '\n') {
+									if (s1 != "" && item[i][br] == ' ') {
+										while (item[i][br] == ' ') br++;
+										if (item[i][br] == ',' || item[i][br] == '\n') break;
+										else throw "ERROR!";
+									}
 									s1 += item[i][br];
 									br++;
 								}
+
 								if (item[i][br] != '\n')
 									br++;
-								// vidi sta ces sa s1
+								
 								if (s1 != "") {
-									if (is_number(s1)) {
-										string s = decToBinary(atoi(s1.c_str()), 2);
+									if (regex_match(s1, numberr)) {
+										if (stoi(s1) < -32769 || stoi(s1) > 32767) throw "ERROR OF SIZE FOR WORD!";
+										string s = decToBinary(stoi(s1), 2);
 										codeC += binary_hexa(s);
 									}
 									else {
@@ -451,39 +484,14 @@ int main(int argc, char* argv[]) {
 								s1 = "";
 							}
 						}
-						// SKIP: ubaciti kod jos za sve, za sad u char* code bleji
+						// SKIP
 						else if (regex_match(posleTacke, skip)) {
+
+							if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION!";
+
 							string s1 = "";
 							while (item[i][br] != '\n') {
-								while (item[i][br] != ',' && item[i][br] != ' ' && item[i][br] != '\n') {
-									s1 += item[i][br];
-									br++;
-								}
-								if (item[i][br] != '\n')
-									br++;
-
-								if (is_number(s1) == false) {
-									throw ".skip symbol ERROR " + item[i];
-								}
-
-								if (s1 != "") {
-									LC = LC + stoi(s1);
-
-									for (int i = 0; i < stoi(s1); i++) {
-										codeC += "00";
-									}
-
-									cout << "LC = " << LC << endl;
-								}
-
-								s1 = "";
-							}
-						}
-						// GLOBAL: dodati jos LC i broj sekcije
-						else if (regex_match(posleTacke, REGglobal)) {
-							string s1 = "";
-							while (item[i][br] != '\n') {
-								while (item[i][br] != ',' && item[i][br] != ' ' && item[i][br] != '\n') {
+								while (item[i][br] != '\n' && item[i][br]!=' ') {
 									if(item[i][br]!=' ')
 										s1 += item[i][br];
 									br++;
@@ -491,18 +499,56 @@ int main(int argc, char* argv[]) {
 								if (item[i][br] != '\n')
 									br++;
 
-								if(is_number(s1)==true) throw ".global + number ERROR " + item[i];
+								if (s1 != "") {
+									if (!regex_match(s1, numberr)) {
+										throw ".skip symbol ERROR " + item[i];
+									}
+									else {
+										int a = stoi(s1); if (a < 0) throw "NEGATIVE NUMBER!";
+										LC = LC + a;
 
-								if(s1!="")
-									globalni.push_back(s1);
+										for (int i = 0; i < stoi(s1); i++) {
+											codeC += "00";
+										}
+
+										cout << "LC = " << LC << endl;
+									}
+								}
+								s1 = "";
+							}
+						}
+						// GLOBAL: dodati jos LC i broj sekcije
+						else if (regex_match(posleTacke, REGglobal)) {
+
+							string s1 = "";
+
+							while (item[i][br] != '\n') {
+								while (item[i][br] == ' ') br++;
+								while (item[i][br] != ',' && item[i][br] != '\n') {
+									if (s1 != "" && item[i][br] == ' ') {
+										while (item[i][br] == ' ') br++;
+										if (item[i][br] == ',' || item[i][br] == '\n') break;
+										else throw "ERROR!";
+									}
+									s1 += item[i][br];
+									br++;
+								}
+
+								if (item[i][br] != '\n')
+									br++;
+
+								if(regex_match(s1,numberr)) throw ".global + number ERROR " + item[i];								
 
 								if (s1 != "") {
 									Symbol_Table* pom = isInSymbol_Table(s1);
 									if (pom != nullptr) {
-										pom->setlg('g');
+										if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE GLOBAL" + item[i];
+										for (int i = 0; i < eksterni.size(); i++) if (eksterni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i];
+										else { pom->setlg('g'); globalni.push_back(s1); }
 									}
 									else {
 										add(s1, 0, 'g', false, 0, 0);
+										globalni.push_back(s1);
 									}
 								}
 
@@ -512,24 +558,35 @@ int main(int argc, char* argv[]) {
 						// EXTERN: dodati jos LC i broj sekcije
 						else if (regex_match(posleTacke, REGextern)) {
 							string s1 = "";
+
 							while (item[i][br] != '\n') {
-								while (item[i][br] != ',' && item[i][br] != ' ' && item[i][br] != '\n') {
-									if (item[i][br] != ' ')
+								while (item[i][br] == ' ') br++;
+								while (item[i][br] != ',' && item[i][br] != '\n') {
+									if (s1 != "" && item[i][br] == ' ') {
+										while (item[i][br] == ' ') br++;
+										if (item[i][br] == ',' || item[i][br] == '\n') break;
+										else throw "ERROR!";
+									}
 									s1 += item[i][br];
 									br++;
 								}
+
 								if (item[i][br] != '\n')
 									br++;
 
-								if (is_number(s1) == true) throw ".extern + number ERROR " + item[i];
+								if (regex_match(s1,numberr)) throw ".extern + number ERROR " + item[i];
 
 								if (s1 != "") {
 									Symbol_Table* pom = isInSymbol_Table(s1);
 									if (pom != nullptr) {
-										pom->setlg('g');
+										if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE GLOBAL" + item[i];
+										if (pom->getDefined() == true) throw "SYMBOL CAN'T BE DEFINED!" + item[i];
+										for (int i = 0; i < globalni.size(); i++) if (globalni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i];
+										else { pom->setlg('g'); eksterni.push_back(s1); }
 									}
 									else {
 										add(s1, 0, 'g', false, 0, 0);
+										eksterni.push_back(s1);
 									}
 								}
 
@@ -696,58 +753,54 @@ int main(int argc, char* argv[]) {
 					}
 
 					br = jj;
-					string pom = "";
 
 					while (item[i][br] == ' ') br++;
 
-					while (item[i][br] != '\n') {
-						pom += item[i][br++];
-					}
+					if (item[i][br] == '.') {
 
-					pom += '\n';
-
-					if (pom[0] == '.') {
-						if (regex_match(pom, end)) {
-							Symbol_Table* sec = isInSymbol_Table(SEKCIJA);
-							if (sec != nullptr) {
-								sec->setSize(LC);
-								for (int i = 0; i < codeC.size(); i += 2) {
-									string u = "";
-									u += codeC[i];
-									u += codeC[i + 1];
-									sec->setCode(u);
-								}
-								codeC = "";
-							}
-							break;
-						}
-						else {
 							string posleTacke = "";
-							int br = 1;
-							while (pom[br] != ' ') {
-								posleTacke += pom[br];
+							br++;
+							while (item[i][br] != ' ' && item[i][br]!='\n') {
+								posleTacke += item[i][br];
 								br++;
 							}
-							br++; // preskoci ' '
+							while (item[i][br] == ' ')
+								br++; // preskoci ' '
 
-							if (regex_match(posleTacke, section)) {
-								string s1 = "";
-								while (pom[br] != ':') {
-									s1 += pom[br];
-									br++;
-								}
-								br++; // preskoci ':'
-
-								while (pom[br] == ' ') br++;
-
-								Symbol_Table* pommm = isInSymbol_Table(SEKCIJA);
-								if (pommm != nullptr) {
-									pommm->setSize(LC);
+							if (posleTacke=="end") {
+								bilo_end = true;
+								Symbol_Table* sec = isInSymbol_Table(SEKCIJA);
+								if (sec != nullptr) {
+									sec->setSize(LC);
 									for (int i = 0; i < codeC.size(); i += 2) {
 										string u = "";
 										u += codeC[i];
 										u += codeC[i + 1];
-										pommm->setCode(u);
+										sec->setCode(u);
+									}
+									codeC = "";
+								}
+								break;
+							}
+							if (posleTacke == "section") {
+								string s1 = "";
+								while (item[i][br] != ':') {
+									if (item[i][br] == ' ') throw "SECTION MUST BE ONE WORD!";
+									s1 += item[i][br];
+									br++;
+								}
+								br++; // preskoci ':'
+
+								while (item[i][br] == ' ') br++;
+
+								Symbol_Table* pom = isInSymbol_Table(SEKCIJA);
+								if (pom != nullptr) {
+									pom->setSize(LC);
+									for (int i = 0; i < codeC.size(); i += 2) {
+										string u = "";
+										u += codeC[i];
+										u += codeC[i + 1];
+										pom->setCode(u);
 									}
 									codeC = "";
 									LC = 0;
@@ -756,9 +809,11 @@ int main(int argc, char* argv[]) {
 								SEKCIJA = s1;
 								Symbol_Table* sec = isInSymbol_Table(SEKCIJA);
 								if (sec != nullptr) {
+									if (sec->getRbr() != sec->getSection()) throw "THERE IS A SYMBOL OF THIS NAME!";
 									LC = sec->getSize();
 									BROJ_SEKCIJE = sec->getRbr();
 									codeC = "";
+
 								}
 								else {
 									add(SEKCIJA, -1, 'l', true, 0, 0);
@@ -767,28 +822,40 @@ int main(int argc, char* argv[]) {
 									BROJ_SEKCIJE = posl->getSection();
 								}
 
-								if (pom[br] != '\n') {
-									throw ".section ERROR " + item[i];
+								if (item[i][br] == '\n') {
+									cout << "Sekcija " << s1 << endl;
+								}
+								else {
+									throw "Error while reading .section " + item[i];
 								}
 							}
-							else {
-								if (regex_match(posleTacke, byte)) {
+							else if (posleTacke == "byte") {
+
+									if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION!";
+
 									string s1 = "";
-									while (pom[br] != '\n') {
-										while (pom[br] != ',' && pom[br] != ' ' && pom[br] != '\n') {
-											s1 += pom[br];
+									while (item[i][br] != '\n') {
+										while (item[i][br] == ' ') br++;
+										while (item[i][br] != ',' && item[i][br] != '\n') {
+											if (s1 != "" && item[i][br] == ' ') {
+												while (item[i][br] == ' ') br++;
+												if (item[i][br] == ',' || item[i][br] == '\n') break;
+												else throw "ERROR!";
+											}
+											s1 += item[i][br];
 											br++;
 										}
-										if (pom[br] != '\n')
+
+										if (item[i][br] != '\n')
 											br++;
-										// vidi sta ces sa s1
 
 										if (s1 != "") {
-											if (is_number(s1)) {
-												if (atoi(s1.c_str()) > 255) {
-													throw ".byte number too big ERROR " + item[i];
+											if (regex_match(s1, numberr)) {
+												if (stoi(s1) < -129 || stoi(s1) > 127) throw "ERROR OF SIZE FOR BYTE!";
+												else {
+													string s = decToBinary(atoi(s1.c_str()), 1);
+													codeC += binary_hexa(s);
 												}
-												else codeC += "55";
 											}
 											else {
 												Symbol_Table* pomm = isInSymbol_Table(s1);
@@ -816,23 +883,34 @@ int main(int argc, char* argv[]) {
 											}
 											LC += 1;
 										}
+
 										s1 = "";
 									}
 								}
-								else if (regex_match(posleTacke, word)) {
+							else if (posleTacke == "word") {
+
+									if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION!";
+
 									string s1 = "";
-									while (pom[br] != '\n') {
-										while (pom[br] != ',' && pom[br] != ' ' && pom[br] != '\n') {
-											s1 += pom[br];
+									while (item[i][br] != '\n') {
+										while (item[i][br] == ' ') br++;
+										while (item[i][br] != ',' && item[i][br] != '\n') {
+											if (s1 != "" && item[i][br] == ' ') {
+												while (item[i][br] == ' ') br++;
+												if (item[i][br] == ',' || item[i][br] == '\n') break;
+												else throw "ERROR!";
+											}
+											s1 += item[i][br];
 											br++;
 										}
-										if (pom[br] != '\n')
+
+										if (item[i][br] != '\n')
 											br++;
-										// vidi sta ces sa s1
 
 										if (s1 != "") {
-											if (is_number(s1)) {
-												string s = decToBinary(atoi(s1.c_str()), 2);
+											if (regex_match(s1, numberr)) {
+												if (stoi(s1) < -32769 || stoi(s1) > 32767) throw "ERROR OF SIZE FOR WORD!";
+												string s = decToBinary(stoi(s1), 2);
 												codeC += binary_hexa(s);
 											}
 											else {
@@ -867,114 +945,138 @@ int main(int argc, char* argv[]) {
 										s1 = "";
 									}
 								}
-								// SKIP: ubaciti kod jos za sve, za sad u char* code bleji
-								else if (regex_match(posleTacke, skip)) {
-									string s1 = "";
-									while (pom[br] != '\n') {
-										while (pom[br] != ',' && pom[br] != ' ' && pom[br] != '\n') {
-											s1 += pom[br];
-											br++;
-										}
-										if (pom[br] != '\n')
-											br++;
+							// SKIP
+							else if (posleTacke == "skip") {
 
-										if (is_number(s1) == false) {
-											throw ".skip symbol ERROR " + item[i];
+									if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION!";
+
+									string s1 = "";
+									while (item[i][br] != '\n') {
+										while (item[i][br] != '\n' && item[i][br] != ' ') {
+											if (item[i][br] != ' ')
+												s1 += item[i][br];
+											br++;
 										}
+										if (item[i][br] != '\n')
+											br++;
 
 										if (s1 != "") {
-											LC = LC + stoi(s1);
-
-											for (int i = 0; i < stoi(s1); i++) {
-												codeC += "00";
+											if (!regex_match(s1,numberr)) {
+												throw ".skip symbol ERROR " + item[i];
 											}
+											else {
+												int a = stoi(s1); if (a < 0) throw "NEGATIVE NUMBER!";
+												LC = LC + a;
 
-											cout << "LC = " << LC << endl;
+												for (int i = 0; i < stoi(s1); i++) {
+													codeC += "00";
+												}
+
+												cout << "LC = " << LC << endl;
+											}
 										}
-
 										s1 = "";
 									}
 								}
-								// GLOBAL: dodati jos LC i broj sekcije
-								else if (regex_match(posleTacke, REGglobal)) {
+							// GLOBAL: dodati jos LC i broj sekcije
+							else if (posleTacke == "global") {
+
 									string s1 = "";
-									while (pom[br] != '\n') {
-										while (pom[br] != ',' && pom[br] != ' ' && pom[br] != '\n') {
-											if (item[i][br] != ' ')
-												s1 += pom[br];
+
+									while (item[i][br] != '\n') {
+										while (item[i][br] == ' ') br++;
+										while (item[i][br] != ',' && item[i][br] != '\n') {
+											if (s1 != "" && item[i][br] == ' ') {
+												while (item[i][br] == ' ') br++;
+												if (item[i][br] == ',' || item[i][br] == '\n') break;
+												else throw "ERROR!";
+											}
+											s1 += item[i][br];
 											br++;
 										}
-										if (pom[br] != '\n')
+
+										if (item[i][br] != '\n')
 											br++;
 
-										if (is_number(s1) == true) throw ".global + number ERROR " + item[i];
-										
-										if(s1!="")
-											globalni.push_back(s1);
+										if (regex_match(s1, numberr)) throw ".global + number ERROR " + item[i];
 
 										if (s1 != "") {
 											Symbol_Table* pom = isInSymbol_Table(s1);
 											if (pom != nullptr) {
-												pom->setlg('g');
+												if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE GLOBAL" + item[i];
+												for (int i = 0; i < eksterni.size(); i++) if (eksterni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i];
+												else { pom->setlg('g'); globalni.push_back(s1); }
 											}
 											else {
-												add(s1, -1, 'g', false, 0, 0);
+												add(s1, 0, 'g', false, 0, 0);
+												globalni.push_back(s1);
 											}
 										}
 
 										s1 = "";
 									}
 								}  // dodati jos LC i broj sekcije
-								// EXTERN: dodati jos LC i broj sekcije
-								else if (regex_match(posleTacke, REGextern)) {
+							// EXTERN: dodati jos LC i broj sekcije
+							else if (posleTacke == "extern") {
 									string s1 = "";
-									while (pom[br] != '\n') {
-										while (pom[br] != ',' && pom[br] != ' ' && pom[br] != '\n') {
-											if (item[i][br] != ' ')
-												s1 += pom[br];
+
+									while (item[i][br] != '\n') {
+										while (item[i][br] == ' ') br++;
+										while (item[i][br] != ',' && item[i][br] != '\n') {
+											if (s1 != "" && item[i][br] == ' ') {
+												while (item[i][br] == ' ') br++;
+												if (item[i][br] == ',' || item[i][br] == '\n') break;
+												else throw "ERROR!";
+											}
+											s1 += item[i][br];
 											br++;
 										}
-										if (pom[br] != '\n')
+
+										if (item[i][br] != '\n')
 											br++;
 
-										if (is_number(s1) == true) throw ".extern + number ERROR " + item[i];
+										if (regex_match(s1, numberr)) throw ".extern + number ERROR " + item[i];
 
 										if (s1 != "") {
 											Symbol_Table* pom = isInSymbol_Table(s1);
 											if (pom != nullptr) {
-												pom->setlg('g');
+												if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE GLOBAL" + item[i];
+												if (pom->getDefined() == true) throw "SYMBOL CAN'T BE DEFINED!" + item[i];
+												for (int i = 0; i < globalni.size(); i++) if (globalni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i];
+												else { pom->setlg('g'); eksterni.push_back(s1); }
 											}
 											else {
 												add(s1, 0, 'g', false, 0, 0);
+												eksterni.push_back(s1);
 											}
 										}
+
 										s1 = "";
 									}
 								}
-								else if (regex_match(posleTacke, equ)) {
+							else if (posleTacke == "equ") {
 									string s2 = "";
 									string s1 = "";
 
-									while (pom[br] != ',') {
-										if (pom[br] != ' ')
-											s1 += pom[br];
+									while (item[i][br] != ',') {
+										if (item[i][br] != ' ')
+											s1 += item[i][br];
 										br++;
 									}
 
 									br++; // preskoci ','
-									while (pom[br] == ' ') br++;
+									while (item[i][br] == ' ') br++;
 
-									Symbol_Table* poom = isInSymbol_Table(s1);
-									if (poom != nullptr && poom->getDefined() == true) if (is_number(s1) == true) throw ".equ already defined ERROR " + item[i];
+									Symbol_Table* pom = isInSymbol_Table(s1);
+									if (pom != nullptr && pom->getDefined() == true) throw ".equ ERROR " + item[i];
 
-									while (pom[br] != '\n') {
-										s2 += pom[br];
+									while (item[i][br] != '\n') {
+										s2 += item[i][br];
 										br++;
 									}
 
 									string pomocni = "";
 
-									//RAZDVAJAM NA NIZ ZNAKOVA I NIZ SIMBOLA
 									for (int i = 0; i < s2.size(); i++) {
 										if (s2[i] != '+' && s2[i] != '-' && s2[i] != '\n') {
 											if (s2[i] != ' ')
@@ -982,19 +1084,20 @@ int main(int argc, char* argv[]) {
 										}
 										else {
 											znak[nizZ++] = s2[i];
-											if (pomocni == "" && i != 0) throw "GRESKA!";
+											if (pomocni == "" && i != 0) cout << "GRESKA!" << endl;
 											else if (pomocni != "") {
 												niz[nizI++] = pomocni;
 												pomocni = "";
 											}
 										}
 									}
+
 									niz[nizI++] = pomocni;
 
 									int izraz = 0;
+
 									int flag = 0;
 
-									// RACUNAM DA LI JE NIZ OD BROJEVA SAMO ILI IMA I SIMBOLA
 									for (int i = 0; i < nizI; i++) {
 										if (is_number(niz[i]) == true) {
 											izraz += atoi(niz[i].c_str());
@@ -1011,49 +1114,45 @@ int main(int argc, char* argv[]) {
 
 									// AKO JE SAMO OD BROJEVA DODAJ/AZURIRAJ VREDNOST U TABELI SIMBOLA I RECI LINKERU DA NE MENJA, A
 									// AKO JE I OD SIMBOLA, ONDA DODAJ NOVI ZAPIS ZA EQU TABELU
-
-									if (flag == 0){
-										if (poom == nullptr) {
+									if (flag == 0) {
+										if (pom == nullptr) {
 											add(s1, BROJ_SEKCIJE, 'l', true, izraz, 0);
 											posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
-											addE(s1, nizI, niz, nizZ, znak);
 										}
 										else {
-											poom->setDefined(true);
-											poom->setValue(izraz);
-											poom->setSection(BROJ_SEKCIJE);
-											poom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
-										}
+											pom->setDefined(true);
+											pom->setValue(izraz);
+											pom->setSection(BROJ_SEKCIJE);
+											pom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
 
-										cout << izraz << endl;
-									}
-									else {
-										if (poom == nullptr) { 
-											add(s1, BROJ_SEKCIJE, 'l', true, 0, 0);
-											//posl->setEqu(); NE TREBA OVO JA MSM
-											posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
-										}
-										else { 
-											//poom->setEqu(); NE TREBA OVO JA MSM
-											poom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
-											poom->setDefined(true);
 										}
 
 										addE(s1, nizI, niz, nizZ, znak);
+										cout << izraz << endl;
+									}
+									else {
+										if (pom == nullptr) {
+											add(s1, BROJ_SEKCIJE, 'l', true, 0, 0); posl->setEqu();
+											posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
+										}
+										else {
+											//pom->setEqu(); NE TREBA OVO JA MSM
+											pom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
+											pom->setDefined(true);
+										}
+
+										addE(s1, nizI, niz, nizZ, znak);
+
 									}
 
 									izraz = 0;
 									nizI = 0;
 									nizZ = 0;
+
 								}
 							}
-						}
-
 					}
-					else {
-						cout << "Instrukcija! " << pom << endl;
-					}
-				}
+			
 				else if (flag == 5) {
 					string lucky = "";
 					string s1 = "";
@@ -2171,6 +2270,9 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
+		
+		if (bilo_end == false) throw "NO .end!";
+		
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next)
 			cout << tek->getSymbol() << " | " << tek->getNiz() << " | " << tek->getZnaci() << endl;
 
