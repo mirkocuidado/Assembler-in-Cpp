@@ -1219,6 +1219,7 @@ int main(int argc, char* argv[]) {
 
 						// obrada za push i pop
 						if (lucky != "") {
+							//immed
 							if (item[i][br] == '$') {
 								if (s1 == "POP") throw "POP AND IMMED ERROR! " + item[i];
 								if (pazi == 1) throw "CAN'T USE B WITH THIS! " + item[i];
@@ -1251,7 +1252,7 @@ int main(int argc, char* argv[]) {
 								LC += (lucky.size() / 8);
 								codeC += binary_hexa(lucky);
 							}
-
+							//regdir
 							else if (item[i][br] == '%') {
 
 								if (pazi == 1) throw "CAN'T BE B AND REGDIR! " + item[i];
@@ -1275,7 +1276,7 @@ int main(int argc, char* argv[]) {
 								LC += (lucky.size() / 8);
 								codeC += binary_hexa(lucky);
 							}
-
+							//regind
 							else if (item[i][br] == '(') {
 
 								if(pazi==1) throw "CAN'T BE B AND REGDIR! " + item[i];
@@ -1400,187 +1401,281 @@ int main(int argc, char* argv[]) {
 								// IMMED
 								if (item[i][br] == '$') {
 									br++;
-									while (item[i][br] != ',') s2 += item[i][br++];
-									br++; // preskoci ','
-									while (item[i][br] == ' ') br++; // preskoci ' ' sve do sledeceg
+									if (item[i][br] == ' ') throw "CAN'T SEPERATE $ AND OPERAND! " + item[i];
 
-									if (pazi == 2) lucky += "1"; //ako je w, tada je size = 1
-									else lucky += "0"; // za b ili nista je size=0, pa ako bude >255, menja se
+									while (item[i][br] != ' ' && item[i][br] !=',') s2 += item[i][br++];
+									if (item[i][br] == ' ') {
+										while (item[i][br] == ' ') br++;
+										if (item[i][br] != ',') throw "ERROR IMMED AND NO , " + item[i];
+										else {
+											br++;  while (item[i][br] == ' ') br++;
+										}// preskoci ' ' sve do sledeceg
+									}
+									else {
+										br++;
+										while (item[i][br] == ' ') br++;  // preskoci ' ' sve do sledeceg
+									}
 
-									if (is_number(s2)) {
-										if (atoi(s2.c_str()) < 255) {
+									if (pazi == 2) lucky += "1";
+									else lucky += "0";
+
+									if (regex_match(s2, numberr)) {
+										if (stoi(s2) < 128 && stoi(s2) > -129) {
 											lucky += "0000000000";
-											if (s1 == "MOV") lucky += "";
-											else if (pazi == 2) lucky += decToBinary(atoi(s2.c_str()), 2);
-											else lucky += decToBinary(atoi(s2.c_str()), 1);
+											if (pazi==0) lucky += "";
+											else if (pazi == 1) lucky += decToBinary(stoi(s2), 1);
+											else if (pazi == 2) lucky += decToBinary(stoi(s2), 2);
 										}
 										else {
-											if (pazi == 0) lucky[5] = '1';
+											if (stoi(s2) > 32767 || stoi(s2) < -32768) throw "OPERAND TOO BIG! " + item[i];
 											if (pazi == 1) throw "Instruction with sufix B and >255 number ERROR!" + item[i];
 											lucky[5] = '1';
 											lucky += "0000000000";
-											lucky += decToBinary(atoi(s2.c_str()), 2);
+											lucky += decToBinary(stoi(s2), 2);
+										}
+									}
+									else {
+										lucky += "0000000000";
+										lucky[5] = '1';
+										Symbol_Table* pom = isInSymbol_Table(s2);
+										if (pom == nullptr) {
+											add(s2, 0, 'l', false, 0, 0);
+										}
+										int a = LC + 2;
+										lucky += "0000000000000000";
+										addF(a, s2, BROJ_SEKCIJE, SEKCIJA, 'w');
+									}
+
+									if (item[i][br] == '$') throw "CAN'T USE IMMED HERE! " + item[i];
+									// immed - regdir
+									if (item[i][br] == '%') {
+										br++;
+										if (item[i][br] == ' ') throw "YOU CAN'T HAVE % AND THEN ' ' " + item[i];
+										while (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++];
+										br++;
+										if (br < item[i].size()) { while (item[i][br] == ' ') br++; if (item[i][br] != '\n') throw "ERROR WITH SPACE - regdir! " + item[i]; }
+										else if (item[i][br - 1] != '\n') throw "ERROR WITH SPACE - regdir! " + item[i];
+										if (s3 == "") throw "NO s2 HERE!" + item[i];
+
+										if (s3.size() == 2) { //s3 je registar bez h ili l
+
+											if (pazi == 1) throw "CAN'T USE B SUFIX AND WHOLE REGISTER! " + item[i];
+
+											if (regex_match(s2, numberr)) {
+												if (pazi == 0 && stoi(s2) < 128 && stoi(s2) > -129)
+													lucky += decToBinary(stoi(s2), 2);
+											}
+
+											lucky += "001"; //regdir
+											lucky += getReg(s3); //registar + 0 za high/low
+										}
+										else if (s3.size() == 3) { // s3 je registar sa h ili l
+											lucky[5] = '0';
+											if (pazi == 2) throw "Instruction with sufix W and h/l ERROR!" + item[i]; // ne sme MOVW sa high.low
+											if (regex_match(s2, numberr)) {
+												if (stoi(s2) < -128 || stoi(s2) > 127) throw "h/l and too big number ERROR!" + item[i]; // ne sme npr. MOV $2000, %R1 high/low
+												if (pazi==0) lucky += decToBinary(stoi(s2), 1);
+											}
+											else throw "Address is 16b and here you have high/low" + item[i];
+
+											lucky += "001"; //regdir
+											lucky += getRegKRACI(s3); //registar + 0 za high/low
+										}
+										else {
+											throw "Register size ERROR!" + item[i];
 										}
 
-										// immed - regdir
+										LC += (lucky.size() / 8);;
+										codeC += binary_hexa(lucky);
+
+									}
+									// immed - regind
+									else if (item[i][br] == '(') {
+										
+										br++;
+										
+										if (pazi == 0 && regex_match(s2, numberr)) {
+											if (stoi(s2) < 128 && stoi(s2) > -129) { lucky += decToBinary(stoi(s2), 1); lucky[5] = '0'; }
+											else {
+												lucky += decToBinary(stoi(s2), 2); lucky[5] = '1';
+											}
+										}
+
+										lucky += "010";
 										if (item[i][br] == '%') {
 											br++;
-
-											while (item[i][br] != '\n' && item[i][br] != ' ') s3 += item[i][br++];
-											if (s3.size() == 2) { //s1 je registar bez h ili l
-
-												if (s1 == "MOV" && s3.size() == 2 && atoi(s2.c_str()) < 255)
-													lucky += decToBinary(atoi(s2.c_str()), 2);
-
-												lucky[5] = '1';
-
-												lucky += "001";
-												lucky += getReg(s3);
-											}
-											else if (s3.size() == 3) { // s1 je registar sa h ili l
-
-												if (pazi == 2) throw "Instruction with sufix W and h/l ERROR!" + item[i]; // ne sme MOVW sa high.low
-												if (atoi(s2.c_str()) > 255) throw "h/l and >255 number ERROR!" + item[i]; // ne sme npr. MOV $2000, %R1 high/low
-
-												lucky += "001";
-
-												lucky += getRegKRACI(s3);
-
-											}
+											while (item[i][br] != ' ' && item[i][br] != ')') { s3 += item[i][br]; br++; }
+											if (item[i][br] == ' ') throw "ERROR WITH SPACE - regind! " + item[i];
 											else {
-												throw "Register size over 3 ERROR!" + item[i];
+												br++;
+												while (item[i][br] == ' ') br++;
+												if (item[i][br] != '\n') throw "ERROR WITH SPACE - regind! " + item[i];
 											}
 
-											LC += (lucky.size() / 8);;
+											lucky += getReg(s3);
+
+											LC += (lucky.size() / 8);
 											codeC += binary_hexa(lucky);
-
 										}
-										// immed - regind
-										else if (item[i][br] == '(') {
-											br++;
-											lucky += "010";
-											if (item[i][br++] == '%') {
-												while (item[i][br] != ')') if (item[i][br] != ' ') s3 += item[i][br++];
-												lucky += getReg(s3);
+										else throw "regind but no % ERROR!" + item[i];
+									}
+									// immed - regindpom/memdir
+									else {
+										while (item[i][br] != '(' && item[i][br] != '\n' && item[i][br] != ' ') s4 += item[i][br++];
+										
+										//memdir
+										if (item[i][br] == ' ' || item[i][br] == '\n') {
 
-												LC += (lucky.size() / 8);
-												codeC += binary_hexa(lucky);
+											if (pazi == 0 && regex_match(s2, numberr)) {
+												if (stoi(s2) < 128 && stoi(s2) > -129) { lucky += decToBinary(stoi(s2), 1); lucky[5] = '0'; }
+												/*else {
+													lucky += decToBinary(stoi(s2), 2); lucky[5] = '1'; // ne treba ovo
+												}*/
 											}
-											throw "regind but no % ERROR!" + item[i];
-										}
-										// immed - regindpom/memdir
-										else {
-											while (item[i][br] != '(' && item[i][br] != '\n') if (item[i][br] != ' ') s4 += item[i][br++];
 
-											if (is_number(s4) == false) {
+											while (item[i][br] == ' ' && item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
 
+											if (regex_match(s4, numberr) == false) {
 												Symbol_Table* pom = isInSymbol_Table(s4);
 												if (pom == nullptr) {
 													add(s4, 0, 'l', false, 0, 0);
 												}
 
-												int av = LC + (lucky.size() / 8) + 1;
+												int av = lucky.size() / 8 + 1;
+												addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
+											}
+											
+											lucky += "10000000";
+											if (regex_match(s4, numberr)) {
+												lucky[5] = '1';
+												if(stoi(s4)>0)
+													lucky += decToBinary(stoi(s4), 2);
+												else throw "CAN'T BE NEGATIVE! " + item[i];
+											}
+											else {
+												lucky += "0000000000000000";
+											}
+										}
+										//regindpom
+										else if (item[i][br] == '(') {
+
+											if (pazi == 0 && regex_match(s2, numberr)) {
+												if (stoi(s2) < 128 && stoi(s2) > -129) { lucky += decToBinary(stoi(s2), 1); lucky[5] = '0'; }
+												/*else {
+													lucky += decToBinary(stoi(s2), 2); lucky[5] = '1'; // ovaj deo ne treba
+												}*/
+											}
+
+											br++;
+
+											if (regex_match(s4, numberr) == false) {
+												Symbol_Table* pom = isInSymbol_Table(s4);
+												if (pom == nullptr) {
+													add(s4, 0, 'l', false, 0, 0);
+												}
+												int av = lucky.size() / 8 + 1;
 												addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
 											}
 
-											if (item[i][br] == '(') {
+											lucky += "011";
+											if (item[i][br] == '%') {
 												br++;
-												lucky += "011";
-												if (item[i][br++] == '%') {
+												while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
+												if (item[i][br] == ')') br++;
+												while (item[i][br] == ' ') br++;
+												if (item[i][br] != '\n') throw "SOME GARBAGE AFTER REGINDPOM! " + item[i];
 
-													while (item[i][br] != ')') if (item[i][br] != ' ') s3 += item[i][br++];
+												if (s3.size() == 2)
 													lucky += getReg(s3);
-												}
-												else throw "regindpom and no % ERROR!" + item[i];
+												else throw "NOT GOOD s2 HERE!" + item[i];
+											}
+											else throw "MUST BE WITHOUT SPACE! " + item[i];
 
-												if (is_number(s4)) {
-													lucky += decToBinary(atoi(s4.c_str()), 2);
-												}
-												else {
-													if (s3 == "PC" || s3 == "pc" || s3 == "r7" || s3 == "R7") {
-														poslF->setLinker(-2);
-														poslF->setIma_Pomeraj();
-														lucky += "0000000000000000";
-													}
-													//lucky += decToBinary(-2, 2);
-													else lucky += "0000000000000000";
-												}
+											if (regex_match(s4,numberr)) {
+												lucky += decToBinary(stoi(s4), 2);
 											}
 											else {
-												if (item[i][br] == '\n') {
-													lucky += "10000000";
-													if (is_number(s4)) {
-														lucky += decToBinary(atoi(s4.c_str()), 2);
-													}
-													else {
-														lucky += "0000000000000000";
-													}
+												if (s3 == "PC" || s3 == "pc" || s3 == "r7" || s3 == "R7") {
+													poslF->setLinker(-2);
+													poslF->setIma_Pomeraj();
+													lucky += "0000000000000000";
 												}
+												else lucky += "0000000000000000";
 											}
-
-											LC += (lucky.size() / 8);
-											codeC += binary_hexa(lucky);
 										}
-									}
-									else {
-									throw "Add. type ERROR!" + item[i];
+										else {
+											throw "NOTHING! " + item[i];
+										}
+
+										LC += (lucky.size() / 8);
+										codeC += binary_hexa(lucky);
 									}
 								}
 								// REGDIR
 								else if (item[i][br] == '%') {
-									br++; //preskoci %
-									while (item[i][br] != ',') if (item[i][br] != ' ') s2 += item[i][br++];
-
-									br++; //preskoci ,
+									br++;
+									if (item[i][br] == ' ') throw "YOU CAN'T HAVE % AND THEN ' ' " + item[i];
+									while (item[i][br] != ' ' && item[i][br] != ',') s2 += item[i][br++];
+									if (item[i][br] == ' ') {
+										while (item[i][br] == ' ') br++; if (item[i][br] != ',') throw "ERROR, NO COMA!";
+									}
+									else {
+										br++;
+										while (item[i][br] == ' ') br++;
+									}
 
 									if (s2.size() == 2) {
-										if (pazi == 2 || pazi==0) lucky += "100";
-										else lucky += "000";
-
-										lucky += "001";
-
-										if (pazi == 1) throw "Instruction with sufix B and regdir ERROR!" + item[i];
-
-										lucky += getReg(s2);
-									}
-									else if (s2.size() == 3) {
-
 										if (pazi == 2) lucky += "100";
 										else lucky += "000";
 
 										lucky += "001";
 
+										if (pazi == 1) throw "Instruction with sufix B and regdir ERROR!" + item[i];
+										lucky += getReg(s2);
+									}
+									else if (s2.size() == 3) {
+
+										lucky += "000";
+										lucky += "001";
 										if (pazi == 2) throw "Instruction with sufix W and h/l ERROR!" + item[i];
 
 										lucky += getRegKRACI(s2);
-
 									}
-									else throw "reg over 3 size ERROR!" + item[i];
+									else throw "reg size ERROR!" + item[i];
 
-									while (item[i][br] == ' ' || item[i][br] == ',') br++;
+									while (item[i][br] == ' ' || item[i][br] == ',') br++; //ovo ne mora, ali bolje leciti, nego spreciti!
 
+									if (item[i][br] == '$') throw "CAN'T USE IMMED HERE! "+ item[i];
 									// regdir - regdir
 									if (item[i][br] == '%') {
 										br++;
-										while (item[i][br] != '\n') if (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++];
+										if (item[i][br] == ' ') throw "YOU CAN'T HAVE % AND THEN ' ' " + item[i];
+										while (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++];
+										if (item[i][br] == ' ') {
+											while (item[i][br] == ' ') br++; if (item[i][br] != '\n') throw "ERROR, NO COMA!";
+										}
 
 										if (s3.size() == 2) {
-
-											if (pazi == 1 && s1 == "MOV") throw "ERROR!" + item[i];
+											if (pazi == 1) throw "ERROR!" + item[i];
+											lucky[5] = '1';
+											
+											if(s2.size()==3)  throw "ERROR!" + item[i];
+											// OVO NE TREBA, JER NE MOZE PRVI BITI MANJI OD DRUGOG - PA NE ZNAS size BIT
+											/*if (pazi == 1 && s1 == "MOV") throw "ERROR!" + item[i];
 											if (s2.size() == 3 && s1 == "MOV") throw "ERROR!" + item[i];
-											if (pazi == 1 && s2.size() == 3 && s1 == "MOV") throw "ERROR!" + item[i];
+											if (pazi == 1 && s2.size() == 3 && s1 == "MOV") throw "ERROR!" + item[i];*/
 
 											lucky += "001";
-
 											lucky += getReg(s3);
 										}
 										else if (s3.size() == 3) {
 
 											lucky += "001";
-											if (pazi == 0 && s2.size() == 2) lucky[5] = '1';
 
 											if (pazi == 2) throw "ERROR!" + item[i];
 											if (pazi == 0 && s2.size() == 2)  throw "ERROR!" + item[i];
+
+											if (s2.size() == 2)  throw "ERROR!" + item[i];
 
 											lucky += getRegKRACI(s3);
 										}
@@ -1595,12 +1690,17 @@ int main(int argc, char* argv[]) {
 										br++;
 										if (item[i][br] == '%') {
 											br++;
+											while (item[i][br] != ' ' && item[i][br] != ')') { s3 += item[i][br]; br++; }
+											if (item[i][br] == ' ') throw "ERROR WITH SPACE - regind! " + item[i];
+											else {
+												br++;
+												while (item[i][br] == ' ') br++;
+												if (item[i][br] != '\n') throw "ERROR WITH SPACE - regind! " + item[i];
+											}
 
 											if (pazi == 0 && s2.size() == 2) lucky[5] = '1';
 
 											lucky += "010";
-
-											while (item[i][br] != ')') if (item[i][br] != ' ') s3 += item[i][br++];
 
 											if (s3.size() == 2) {
 												lucky += getReg(s3);
@@ -1614,31 +1714,65 @@ int main(int argc, char* argv[]) {
 									}
 									// regdir - regindpom/memdir
 									else {
-										while (item[i][br] != '(' && item[i][br] != '\n') if (item[i][br] != ' ') s4 += item[i][br++];
+										while (item[i][br] != '(' && item[i][br] != '\n' && item[i][br] != ' ') s4 += item[i][br++];
 
-										if (is_number(s4) == false) {
+										//memdir
+										if (item[i][br] == ' ' || item[i][br] == '\n') {
+											while (item[i][br] == ' ' && item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
 
-											Symbol_Table* pom = isInSymbol_Table(s4);
-											if (pom == nullptr) {
-												add(s4, 0, 'l', false, 0, 0);
+											if (regex_match(s4, numberr) == false) {
+												Symbol_Table* pom = isInSymbol_Table(s4);
+												if (pom == nullptr) {
+													add(s4, 0, 'l', false, 0, 0);
+												}
+
+												int av = LC + 3;
+												addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
 											}
 
-											int av = LC + (lucky.size() / 8) + 1;
-											addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
-										}
+											lucky += "10000000";
+											if (pazi == 0 && s2.size() == 2) lucky[5] = '1';
 
-										if (item[i][br] == '(') { // regdir - regindpom PAZI PC
+											if (is_number(s4)) {
+												if (stoi(s4) > 0)
+													lucky += decToBinary(stoi(s4), 2);
+												else throw "CAN'T BE NEGATIVE! " + item[i];
+											}
+											else {
+												lucky += "0000000000000000";
+											}
+
+										}
+										// regindpom
+										else if (item[i][br] == '(') {
+
 											br++;
+
+											if (regex_match(s4, numberr) == false) {
+												Symbol_Table* pom = isInSymbol_Table(s4);
+												if (pom == nullptr) {
+													add(s4, 0, 'l', false, 0, 0);
+												}
+												int av = LC + 3;
+												addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
+											}
 
 											lucky += "011";
 
-											if (pazi == 0 && s2.size() == 2) lucky[5] = '1';
+											if (item[i][br] == '%') {
+												br++;
+												while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
+												if (item[i][br] == ')') br++;
+												while (item[i][br] == ' ') br++;
+												if (item[i][br] != '\n') throw "SOME GARBAGE AFTER REGIND! " + item[i];
 
-											if (item[i][br++] == '%') {
-												while (item[i][br] != ')') if (item[i][br] != ' ') s3 += item[i][br++];
-												lucky += getReg(s3);
+												if (s3.size() == 2)
+													lucky += getReg(s3);
+												else throw "NOT GOOD s2 HERE!" + item[i];
 											}
-											else throw "ERROR!" + item[i];
+											else throw "MUST BE WITHOUT SPACE! " + item[i];
+
+											if (pazi == 0 && s2.size() == 2) lucky[5] = '1';
 
 											if (is_number(s4)) {
 												lucky += decToBinary(atoi(s4.c_str()), 2);
@@ -1652,25 +1786,14 @@ int main(int argc, char* argv[]) {
 												//lucky += decToBinary(-2, 2);
 												else lucky += "0000000000000000";
 											}
+
 										}
 										else {
-											if (item[i][br] == '\n') {
-												lucky += "10000000";
-												if (pazi == 0 && s2.size() == 2) lucky[5] = '1';
-
-												if (is_number(s4)) {
-													lucky += decToBinary(atoi(s4.c_str()), 2);
-												}
-												else {
-													lucky += "0000000000000000";
-												}
-											}
+											throw "UNKNOWN! " + item[i];
 										}
 
 										LC += lucky.size() / 8;
 										codeC += binary_hexa(lucky);
-
-
 									}
 								}
 								// REGIND
@@ -1678,253 +1801,278 @@ int main(int argc, char* argv[]) {
 									br++;
 									if (item[i][br] == '%') {
 										br++;
-										while (item[i][br] != ')') if (item[i][br] != ' ') s2 += item[i][br++];
+										while (item[i][br] != ' ' && item[i][br] != ')') { s2 += item[i][br]; br++; }
+										if (item[i][br] == ' ') throw "ERROR WITH SPACE - regind! " + item[i];
+										else {
+											br++;
+											while (item[i][br] == ' ') br++;
+											if (item[i][br] != ',') throw "ERROR WITH SPACE - regind! " + item[i];
+											else {
+												br++;  while (item[i][br] == ' ') br++;
+											}
+										}
+									}
+									else throw "SPACE NOT ALLOWED! " + item[i];
 
-										br++; // za zagradu;
+									if (pazi == 2) lucky += "100";
+									else lucky += "000";
 
-										if (pazi == 2) lucky += "100";
-										else lucky += "000";
+									lucky += "010";
+
+									if (s2.size() == 2)
+										lucky += getReg(s2);
+									else throw "ERROR!" + item[i];
+
+									if (item[i][br] == '$') throw "CAN'T USE IMMED HERE! " + item[i];
+									// regind - regdir
+									if (item[i][br] == '%') {
+										br++;
+										if (item[i][br] == ' ') throw "YOU CAN'T HAVE % AND THEN ' ' " + item[i];
+										while (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++];
+										if (item[i][br] == ' ') {
+											while (item[i][br] == ' ') br++; if (item[i][br] != '\n') throw "ERROR, NO COMA!";
+										}
+
+										lucky += "001";
+
+										if (s3.size() == 2) {
+											if (pazi == 0) lucky[5] = '1';
+											if (pazi == 1) throw "ERROR!" + item[i];
+											lucky += getReg(s3);
+										}
+										else if (s3.size() == 3) {
+											if (pazi == 2) throw "ERROR!" + item[i];
+											lucky += getRegKRACI(s3);
+										}
+
+										LC += lucky.size() / 8;
+										codeC += binary_hexa(lucky);
+
+									}
+									// regind - regind
+									else if (item[i][br] == '(') {
+										br++;
+										if (item[i][br] == '%') {
+											br++;
+											while (item[i][br] != ' ' && item[i][br] != ')') { s3 += item[i][br]; br++; }
+											if (item[i][br] == ' ') throw "ERROR WITH SPACE - regind! " + item[i];
+											else {
+												br++;
+												while (item[i][br] == ' ') br++;
+												if (item[i][br] != '\n') throw "ERROR WITH SPACE - regind! " + item[i];
+											}
+										}
+										else throw "CAN'T USE SPACE! " + item[i];
 
 										lucky += "010";
 
-										if (s2.size() == 2)
-											lucky += getReg(s2);
+										if (s3.size() == 2) {
+											lucky += getReg(s3);
+										}
 										else throw "ERROR!" + item[i];
 
-										while (item[i][br] == ' ') br++;
+										LC += lucky.size() / 8;
+										codeC += binary_hexa(lucky);
 
-										if (item[i][br] == ',') br++;
-										else throw "ERROR!" + item[i];
+									}
+									// regind - regindpom / memdir
+									else {
+										while (item[i][br] != '(' && item[i][br] != '\n' && item[i][br] != ' ') s4 += item[i][br++];
 
-										while (item[i][br] == ' ') br++;
+										// memdir
+										if (item[i][br] == ' ' || item[i][br] == '\n') {
+											while (item[i][br] == ' ' && item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
 
-										// regind - regdir
-										if (item[i][br] == '%') {
-											br++;
-
-											lucky += "001";
-
-											while (item[i][br] != '\n') if (item[i][br] != ' ') s3 += item[i][br++];
-
-											if (s3.size() == 2) {
-
-												if (pazi == 0) lucky[5] = '1';
-
-												if (pazi == 1) throw "ERROR!" + item[i];
-
-												lucky += getReg(s3);
-											}
-											else if (s3.size() == 3) {
-
-												if (pazi == 2) throw "ERROR!" + item[i];
-
-												lucky += getRegKRACI(s3);
-											}
-
-											LC += lucky.size() / 8;
-											codeC += binary_hexa(lucky);
-
-										}
-										// regind - regind
-										else if (item[i][br] == '(') {
-											br++;
-											if (item[i][br] == '%') {
-												br++;
-												while (item[i][br] != ')') if (item[i][br] != ' ') s3 += item[i][br++];
-
-												br++; // za zagradu;
-
-												lucky += "010";
-												if (pazi == 0) lucky[5] = '1';
-
-												if (s3.size() == 2) {
-													lucky += getReg(s3);
-												}
-												else throw "ERROR!" + item[i];
-											}
-											else throw "ERROR!" + item[i];
-
-											LC += lucky.size() / 8;
-											codeC += binary_hexa(lucky);
-
-										}
-										// regind - regindpom / memdir
-										else {
-											while (item[i][br] != '(' && item[i][br] != '\n') if (item[i][br] != ' ') s4 += item[i][br++];
-
-											if (is_number(s4) == false) {
-
+											if (regex_match(s4, numberr) == false) {
 												Symbol_Table* pom = isInSymbol_Table(s4);
 												if (pom == nullptr) {
 													add(s4, 0, 'l', false, 0, 0);
 												}
 
-												int av = LC + (lucky.size() / 8) + 1;
+												int av = LC + 3;
 												addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
 											}
 
-											if (item[i][br] == '(') { //regind - regindpom
-												br++;
+											lucky += "10000000";
 
-												lucky += "011";
-
-												if (pazi == 0) lucky[5] = '1';
-
-												if (item[i][br++] == '%') {
-													while (item[i][br] != ')') if (item[i][br] != ' ') s3 += item[i][br++];
-
-													lucky += getReg(s3);
-												}
-												else throw "ERROR!" + item[i];
-
-												if (is_number(s4)) {
-													lucky += decToBinary(atoi(s4.c_str()), 2);
-												}
-												else {
-													if (s3 == "PC" || s3 == "pc" || s3 == "r7" || s3 == "R7") {
-														lucky += "0000000000000000";
-														poslF->setLinker(-5);
-														poslF->setIma_Pomeraj();
-													}
-													//lucky += decToBinary(-2, 2);
-													else lucky += "0000000000000000";
-												}
+											if (regex_match(s4, numberr)) {
+												if (stoi(s4) > 0)
+													lucky += decToBinary(stoi(s4), 2);
+												else throw "CAN'T BE NEGATIVE! " + item[i];
 											}
-											else { //regind - memdir
-												if (item[i][br] == '\n') {
-													lucky += "10000000";
-													if (pazi == 0) lucky[5] = '1';
-
-													if (is_number(s4)) {
-														lucky += decToBinary(atoi(s4.c_str()), 2);
-													}
-													else {
-														lucky += "0000000000000000";
-													}
-												}
+											else {
+												lucky += "0000000000000000";
 											}
-
-											LC += lucky.size() / 8;
-											codeC += binary_hexa(lucky);
 										}
+										// regindpom
+										else if (item[i][br] == '(') {
+											br++;
+
+											if (regex_match(s4, numberr) == false) {
+												Symbol_Table* pom = isInSymbol_Table(s4);
+												if (pom == nullptr) {
+													add(s4, 0, 'l', false, 0, 0);
+												}
+												int av = LC + 3;
+												addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
+											}
+
+											lucky += "011";
+
+											if (item[i][br] == '%') {
+												br++;
+												while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
+												if (item[i][br] == ')') br++;
+												while (item[i][br] == ' ') br++; 
+												if (item[i][br] != '\n') throw "SOME GARBAGE AFTER! " + item[i];
+
+												if (s3.size() == 2)
+													lucky += getReg(s3);
+												else throw "NOT GOOD s2 HERE!" + item[i];
+											}
+											else throw "MUST BE WITHOUT SPACE! " + item[i];
+
+											if (regex_match(s4, numberr)) {
+												lucky += decToBinary(atoi(s4.c_str()), 2);
+											}
+											else {
+												if (s3 == "PC" || s3 == "pc" || s3 == "r7" || s3 == "R7") {
+													lucky += "0000000000000000";
+													poslF->setLinker(-2);
+													poslF->setIma_Pomeraj();
+												}
+												//lucky += decToBinary(-2, 2);
+												else lucky += "0000000000000000";
+											}
+										}
+										else {
+											throw "UNKNOWN! " + item[i];
+										}
+										LC += lucky.size() / 8;
+										codeC += binary_hexa(lucky);
 									}
 								}
 								// REGINDPOM/MEMDIR
 								else {
-									while (item[i][br] != '(' && item[i][br] != ',') if (item[i][br] != ' ') s4 += item[i][br++];
-
-
-									if (is_number(s4) == false) {
-
-										Symbol_Table* pom = isInSymbol_Table(s4);
-										if (pom == nullptr) {
-											add(s4, 0, 'l', false, 0, 0);
-										}
-
-										int av = LC + 2;
-										addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
-									}
-
-									For_Table* pomocni = poslF;
+									while (item[i][br] != '(' && item[i][br] != ',' && item[i][br] != ' ') s4 += item[i][br++];
 
 									//REGINDPOM
 									if (item[i][br] == '(') {
 										br++;
 
+										if (regex_match(s4, numberr) == false) {
+											Symbol_Table* pom = isInSymbol_Table(s4);
+											if (pom == nullptr) {
+												add(s4, 0, 'l', false, 0, 0);
+											}
+											int av = LC + 2;
+											addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
+										}
+										For_Table* pomocni = poslF;
+
 										lucky += "000011";
 										if (pazi == 2) lucky[5] = '1';
 
-										if (item[i][br++] == '%') {
-											while (item[i][br] != ')') if (item[i][br] != ' ') s2 += item[i][br++];
+										if (item[i][br] == '%') {
+											br++;
+											while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\n') s2 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
+											if (item[i][br] == ')') br++;
+											while (item[i][br] == ' ') br++;
+											if (item[i][br] != ',') throw "NO COMA HERE! " + item[i];
+											else {
+												br++;  while (item[i][br] == ' ') br++;
+											}
 
-											lucky += getReg(s2);
+											if (s2.size() == 2)
+												lucky += getReg(s2);
+											else throw "NOT GOOD s2 HERE!" + item[i];
 										}
-										else throw "ERROR!" + item[i];
+										else throw "MUST BE WITHOUT SPACE! " + item[i];
 
 										int SPECIJALNI_FLAG = 0;
 										if (s2 == "PC" || s2 == "pc" || s2 == "R7" || s2 == "r7") SPECIJALNI_FLAG = 1;
 
-										if (is_number(s4)) {
-											lucky += decToBinary(atoi(s4.c_str()), 2);
+										if (regex_match(s2,numberr)) {
+											lucky += decToBinary(stoi(s4), 2);
 										}
 										else {
 											if (SPECIJALNI_FLAG == 0)
 												lucky += "0000000000000000";
 										}
 
-										br++; //preskoci ')'
-										while (item[i][br] == ' ') br++;
-										if (item[i][br] == ',') {
+										if (item[i][br] == '$') throw "CAN'T USE IMMED AS SECOND OPERAND! " + item[i];
+										// regindpom - regdir
+										else if (item[i][br] == '%') {
 											br++;
-											while (item[i][br] == ' ') br++;
-											// regindpom - regdir
+											if (item[i][br] == ' ') throw "YOU CAN'T HAVE % AND THEN ' ' " + item[i];
+											while (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++];
+											if (item[i][br] == ' ') {
+												while (item[i][br] == ' ') br++; if (item[i][br] != '\n') throw "ERROR, NO COMA!";
+											}
+
+											if (SPECIJALNI_FLAG == 1) {
+
+												pomocni->setLinker(-3);
+												pomocni->setIma_Pomeraj();
+												lucky += "0000000000000000";
+												//lucky += decToBinary(-3, 2);
+											}
+
+											lucky += "001";
+											if (s3.size() == 2) {
+												if (pazi == 0) lucky[5] = '1';
+												if (pazi == 1) throw "ERROR!" + item[i];
+												lucky += getReg(s3);
+											}
+											else if (s3.size() == 3) {
+												if (pazi == 2) throw "ERROR!" + item[i];
+												lucky += getRegKRACI(s3);
+											}
+
+											LC += lucky.size() / 8;
+											codeC += binary_hexa(lucky);
+										}
+										// regindpom - regind
+										else if (item[i][br] == '(') {
+											br++;
+
 											if (item[i][br] == '%') {
 												br++;
-
-												while (item[i][br] != '\n') if (item[i][br] != ' ') s3 += item[i][br++];
-
-												if (SPECIJALNI_FLAG == 1) {
-
-													pomocni->setLinker(-3);
-													pomocni->setIma_Pomeraj();
-													lucky += "0000000000000000";
-													//lucky += decToBinary(-3, 2);
-												}
-
-												lucky += "001";
-
-												if (s3.size() == 2) {
-
-													if (pazi == 0) lucky[5] = '1';
-
-													if (pazi == 1) throw "ERROR!" + item[i];
-
-													lucky += getReg(s3);
-												}
-												else if (s3.size() == 3) {
-
-													if (pazi == 2) throw "ERROR!" + item[i];
-
-													lucky += getRegKRACI(s3);
-												}
-
-												LC += lucky.size() / 8;
-												codeC += binary_hexa(lucky);
-											}
-											// regindpom - regind
-											else if (item[i][br] == '(') {
-												br++;
-												if (item[i][br] == '%') {
+												while (item[i][br] != ' ' && item[i][br] != ')') { s3 += item[i][br]; br++; }
+												if (item[i][br] == ' ') throw "ERROR WITH SPACE - regind! " + item[i];
+												else {
 													br++;
-													while (item[i][br] != ')') if (item[i][br] != ' ') s3 += item[i][br++];
-
-													br++; // za zagradu;
-
-													if (SPECIJALNI_FLAG == 1) {
-														pomocni->setLinker(-3);
-														pomocni->setIma_Pomeraj();
-														lucky += "0000000000000000";
-														//lucky += decToBinary(-3, 2);
-													}
-
-													lucky += "010";
-													if (pazi == 0) lucky[5] = '1';
-
-													if (s3.size() == 2) {
-														lucky += getReg(s3);
-													}
-													else throw "ERROR!" + item[i];
+													while (item[i][br] == ' ') br++;
+													if (item[i][br] != '\n') throw "ERROR WITH SPACE - regind! " + item[i];
 												}
-												else throw "ERROR!" + item[i];
-
-												LC += lucky.size() / 8;
-												codeC += binary_hexa(lucky);
 											}
-											// regindpom - regindpom/memdir
-											else {
-												while (item[i][br] != '(' && item[i][br] != '\n') if (item[i][br] != ' ') s5 += item[i][br++];
+											else throw "CAN'T USE SPACE! " + item[i];
 
-												if (is_number(s5) == false) {
+											if (SPECIJALNI_FLAG == 1) {
+												pomocni->setLinker(-3);
+												pomocni->setIma_Pomeraj();
+												lucky += "0000000000000000";
+												//lucky += decToBinary(-3, 2);
+											}
+
+											lucky += "010";
+
+											if (s3.size() == 2) {
+												lucky += getReg(s3);
+											}
+											else throw "ERROR!" + item[i];
+
+											LC += lucky.size() / 8;
+											codeC += binary_hexa(lucky);
+										}
+										else {
+											while (item[i][br] != '(' && item[i][br] != '\n' && item[i][br] != ' ') s5 += item[i][br++];
+
+											// regindpom - memdir
+											if (item[i][br] == ' ' || item[i][br] == '\n') {
+												while (item[i][br] == ' ' && item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
+
+												if (regex_match(s5,numberr) == false) {
 
 													Symbol_Table* pom = isInSymbol_Table(s5);
 													if (pom == nullptr) {
@@ -1932,7 +2080,8 @@ int main(int argc, char* argv[]) {
 													}
 
 													if (SPECIJALNI_FLAG == 0) {
-														int av = LC + (lucky.size() / 8) + 1;
+														//int av = LC + (lucky.size() / 8) + 1;
+														int av = LC + 5;
 														addF(av, s5, BROJ_SEKCIJE, SEKCIJA, 'w');
 													}
 													else {
@@ -1940,139 +2089,157 @@ int main(int argc, char* argv[]) {
 														addF(av, s5, BROJ_SEKCIJE, SEKCIJA, 'w');
 														pomocni->setLinker(-5);
 														pomocni->setIma_Pomeraj();
-														lucky += "0000000000000000";
 													}
 												}
 
-												// regindpom - regindpom
-												if (item[i][br] == '(') {
-													br++;
-
-													if (pazi == 0) lucky[5] = '1';
-
-													if (item[i][br++] == '%') {
-														while (item[i][br] != ')') if (item[i][br] != ' ') s3 += item[i][br++];
-
-														if (SPECIJALNI_FLAG == 1) {
-															pomocni->setLinker(-5);
-															pomocni->setIma_Pomeraj();
-														}
-														//lucky += decToBinary(-5, 2);
-
-														lucky += "011";
-
-														lucky += getReg(s3);
-													}
-													else throw "ERROR!" + item[i];
-
-													if (is_number(s4)) {
-														lucky += decToBinary(atoi(s4.c_str()), 2);
-													}
-													else {
-														if (s3 == "PC" || s3 == "pc" || s3 == "R7" || s3 == "r7") {
-															poslF->setLinker(-2);
-															poslF->setIma_Pomeraj();
-															lucky += "0000000000000000";
-														}
-														//lucky += decToBinary(-2, 2);
-														else lucky += "0000000000000000";
-													}
+												if (SPECIJALNI_FLAG == 1) {
+													pomocni->setLinker(-5);
+													pomocni->setIma_Pomeraj();
+													lucky += "0000000000000000";
 												}
-												// regindpom - memdir
+
+												lucky += "10000000";
+
+												if (regex_match(s5, numberr)) {
+													if (stoi(s5) > 0)
+														lucky += decToBinary(stoi(s5), 2);
+													else throw "CAN'T BE NEGATIVE! " + item[i];
+												}
 												else {
-													if (item[i][br] == '\n') {
-
-														if (SPECIJALNI_FLAG == 1) {
-															pomocni->setLinker(-5);
-															pomocni->setIma_Pomeraj();
-														}
-														//lucky += decToBinary(-5, 2);
-
-														lucky += "10000000";
-														if (pazi == 0) lucky[5] = '1';
-
-														if (is_number(s4)) {
-															lucky += decToBinary(atoi(s4.c_str()), 2);
-														}
-														else {
-															lucky += "0000000000000000";
-														}
-													}
+													lucky += "0000000000000000";
 												}
 
 												LC += lucky.size() / 8;
 												codeC += binary_hexa(lucky);
 											}
+											// regindpom - regindpom
+											else if (item[i][br] == '(') {
+												br++;
+
+												if (regex_match(s5, numberr) == false) {
+
+													Symbol_Table* pom = isInSymbol_Table(s5);
+													if (pom == nullptr) {
+														add(s5, 0, 'l', false, 0, 0);
+													}
+
+													int av = LC + 5;
+													addF(av, s5, BROJ_SEKCIJE, SEKCIJA, 'w');
+												}
+
+												if (item[i][br] == '%') {
+													br++;
+													while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
+													if (item[i][br] == ')') br++;
+													while (item[i][br] == ' ') br++;
+													if (item[i][br] != '\n') throw "SOME GARBAGE AFTER! " + item[i];
+												}
+												else throw "MUST BE WITHOUT SPACE! " + item[i];
+											
+												if (SPECIJALNI_FLAG == 1) {
+													pomocni->setLinker(-5);
+													pomocni->setIma_Pomeraj();
+													lucky += "0000000000000000";
+												}
+
+												lucky += "011";
+
+												if(s3.size()==2)
+													lucky += getReg(s3);
+												else throw "REG SIZE ERROR! " + item[i];
+											
+												if (regex_match(s5, numberr)) {
+													lucky += decToBinary(stoi(s5), 2);
+												}
+												else {
+													if (s3 == "PC" || s3 == "pc" || s3 == "R7" || s3 == "r7") {
+														poslF->setLinker(-2);
+														poslF->setIma_Pomeraj();
+														lucky += "0000000000000000";
+													}
+													//lucky += decToBinary(-2, 2);
+													else lucky += "0000000000000000";
+												}
+											
+												LC += lucky.size() / 8;
+												codeC += binary_hexa(lucky);
+											}
+											else throw "UNKNOWN! " + item[i];
 										}
-										else throw "ERROR!" + item[i];
-
-
 									}
 									//MEMDIR
-									else if (item[i][br] == ',') {
+									else if (item[i][br] == ' ' || item[i][br] == ',') {
+										while (item[i][br] == ' ' && item[i][br] == '\t') br++; if (item[i][br] != ',') throw "SPACE ERROR - memdir!";
 										br++;
+										while (item[i][br] == ' ') br++;
+										if (item[i][br] == '\n') throw "NO SECOND OPERAND! " + item[i];
 
 										if (pazi == 2) lucky += "100";
 										else lucky += "000";
 
 										lucky += "10000000";
 
-										if (is_number(s4)) {
-											lucky += decToBinary(atoi(s4.c_str()), 2);
+										if (regex_match(s4, numberr)) {
+											if (stoi(s4) > 0)
+												lucky += decToBinary(stoi(s4), 2);
+											else throw "CAN'T BE NEGATIVE! " + item[i];
 										}
 										else {
 											Symbol_Table* pom = isInSymbol_Table(s4);
-											if (pom == nullptr) add(s4, 0, 'l', false, 0, 0);
-											lucky += "0000000000000000"; // dodaj decToBinary(TABELA SIMBOLA-VREDNOST)
+											if (pom == nullptr) 
+												add(s4, 0, 'l', false, 0, 0);
+
+											lucky += "0000000000000000";
+											int av = LC + 2;
+											addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
 										}
 
-										while (item[i][br] == ' ') br++;
-
+										if (item[i][br] == '$') throw "CAN'T USE IMMED HERE! " + item[i];
 										// memdir - regdir
 										if (item[i][br] == '%') {
 											br++;
+											if (item[i][br] == ' ') throw "YOU CAN'T HAVE % AND THEN ' ' " + item[i];
+											while (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++];
+											if (item[i][br] == ' ') {
+												while (item[i][br] == ' ') br++; if (item[i][br] != '\n') throw "ERROR, NO COMA!";
+											}
+
 											lucky += "001";
 
-											while (item[i][br] != '\n') if (item[i][br] != ' ') s3 += item[i][br++];
-
 											if (s3.size() == 2) {
-
 												if (pazi == 0) lucky[5] = '1';
-
 												if (pazi == 1) throw "ERROR!" + item[i];
-
 												lucky += getReg(s3);
 											}
 											else if (s3.size() == 3) {
-
 												if (pazi == 2) throw "ERROR!" + item[i];
-
 												lucky += getRegKRACI(s3);
 											}
-											else throw "ERROR!" + item[i];
+											else throw "REG SIZE ERROR!" + item[i];
 
 											LC += lucky.size() / 8;
 											codeC += binary_hexa(lucky);
 										}
-										// memdir - regind
+										//memdir - regind
 										else if (item[i][br] == '(') {
 											br++;
+
 											if (item[i][br] == '%') {
 												br++;
-												while (item[i][br] != ')') if (item[i][br] != ' ') s3 += item[i][br++];
-
-												br++; // za zagradu;
-
-												if (pazi == 2) lucky += "100";
-												else lucky += "000";
-
-												lucky += "010";
-												if (pazi == 0) lucky[5] = '1';
-
-												if (s3.size() == 2) {
-													lucky += getReg(s3);
+												while (item[i][br] != ' ' && item[i][br] != ')') { s3 += item[i][br]; br++; }
+												if (item[i][br] == ' ') throw "ERROR WITH SPACE - regind! " + item[i];
+												else {
+													br++;
+													while (item[i][br] == ' ') br++;
+													if (item[i][br] != '\n') throw "ERROR WITH SPACE - regind! " + item[i];
 												}
-												else throw "ERROR!" + item[i];
+											}
+											else throw "CAN'T USE SPACE! " + item[i];
+
+											lucky += "010";
+
+											if (s3.size() == 2) {
+												lucky += getReg(s3);
 											}
 											else throw "ERROR!" + item[i];
 
@@ -2081,69 +2248,96 @@ int main(int argc, char* argv[]) {
 										}
 										// memdir - regindpom/memdir
 										else {
-											while (item[i][br] != '(' && item[i][br] != '\n') if (item[i][br] != ' ') s5 += item[i][br++];
+											while (item[i][br] != '(' && item[i][br] != '\n' && item[i][br] != ' ') s5 += item[i][br++];
 
-											if (is_number(s5) == false) {
+											// memdir
+											if (item[i][br] == ' ' || item[i][br] == '\n') {
+												while (item[i][br] == ' ' && item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
 
-												Symbol_Table* pom = isInSymbol_Table(s5);
-												if (pom == nullptr) {
-													add(s5, 0, 'l', false, 0, 0);
+												if (regex_match(s5,numberr) == false) {
+
+													Symbol_Table* pom = isInSymbol_Table(s5);
+													if (pom == nullptr) {
+														add(s5, 0, 'l', false, 0, 0);
+													}
+
+													int av = LC + 5;
+													addF(av, s5, BROJ_SEKCIJE, SEKCIJA, 'w');
 												}
 
-												int av = LC + (lucky.size() / 8) + 1;
-												addF(av, s5, BROJ_SEKCIJE, SEKCIJA, 'w');
-											}
+												lucky += "10000000";
 
-											if (item[i][br] == '(') {
+												if (regex_match(s5, numberr)) {
+													if (stoi(s5) > 0)
+														lucky += decToBinary(stoi(s5), 2);
+													else throw "CAN'T BE NEGATIVE! " + item[i];
+												}
+												else {
+													lucky += "0000000000000000";
+												}
+
+												LC += lucky.size() / 8;
+												codeC += binary_hexa(lucky);
+
+											}
+											// regindpom
+											else if (item[i][br] == '(') {
 												br++;
+
+												if (regex_match(s5, numberr) == false) {
+
+													Symbol_Table* pom = isInSymbol_Table(s5);
+													if (pom == nullptr) {
+														add(s5, 0, 'l', false, 0, 0);
+													}
+
+													int av = LC + (lucky.size() / 8) + 1;
+													addF(av, s5, BROJ_SEKCIJE, SEKCIJA, 'w');
+												}
+
+												if (item[i][br] == '%') {
+													br++;
+													while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
+													if (item[i][br] == ')') br++;
+													while (item[i][br] == ' ') br++;
+													if (item[i][br] != '\n') throw "SOME GARBAGE AFTER! " + item[i];
+												}
+												else throw "MUST BE WITHOUT SPACE! " + item[i];
 
 												lucky += "011";
 
-												if (pazi == 0) lucky[5] = '1';
-
-												if (item[i][br++] == '%') {
-													while (item[i][br] != ')') if (item[i][br] != ' ') s3 += item[i][br++];
-
+												if (s3.size() == 2)
 													lucky += getReg(s3);
-												}
-												else throw "ERROR!" + item[i];
+												else throw "REG SIZE ERROR! " + item[i];
 
-												if (is_number(s5)) {
-													lucky += decToBinary(atoi(s5.c_str()), 2);
+												if (regex_match(s5, numberr)) {
+													lucky += decToBinary(stoi(s5), 2);
 												}
 												else {
 													if (s3 == "PC" || s3 == "pc" || s3 == "R7" || s3 == "r7") {
-														poslF->setLinker(-5);
+														poslF->setLinker(-2);
 														poslF->setIma_Pomeraj();
 														lucky += "0000000000000000";
 													}
 													//lucky += decToBinary(-2, 2);
 													else lucky += "0000000000000000";
 												}
-											}
-											else {
-												if (item[i][br] == '\n') {
-													lucky += "10000000";
-													if (pazi == 0) lucky[5] = '1';
 
-													if (is_number(s5)) {
-														lucky += decToBinary(atoi(s5.c_str()), 2);
-													}
-													else {
-														Symbol_Table* pom = isInSymbol_Table(s5);
-														if (pom == nullptr) add(s5, 0, 'l', false, 0, 0);
-														lucky += "0000000000000000";
-													}
-												}
+												LC += lucky.size() / 8;
+												codeC += binary_hexa(lucky);
 											}
-
-											LC += lucky.size() / 8;
-											codeC += binary_hexa(lucky);
+											else throw "UNKNOWN! " + item[i];
 										}
-									}
+
+									}	
 								}
 							}
 						}
+
+
+
+
+
 
 						// BRANCHES
 						if (lucky == "") {
