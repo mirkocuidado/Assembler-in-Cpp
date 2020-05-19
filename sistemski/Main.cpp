@@ -232,7 +232,9 @@ int main(int argc, char* argv[]) {
 	try{
 
 		if (argc != 4) throw "Not enough parameters!";
+		//if (argv[1] != "-o") throw "Write -o in your command line call as a second argument!";
 
+		cout << argv[argc - 1] << endl;
 		ifstream inFile;
 		inFile.open(argv[argc-1]);
 		if (inFile.fail()) {
@@ -1740,7 +1742,7 @@ int main(int argc, char* argv[]) {
 											lucky += "10000000";
 											if (pazi == 0 && s2.size() == 2) lucky[5] = '1';
 
-											if (regex(s4,numberr)) {
+											if (regex_match(s4,numberr)) {
 												if (stoi(s4) > 0)
 													lucky += decToBinary(stoi(s4), 2);
 												else throw "CAN'T BE NEGATIVE! " + item[i];
@@ -2576,6 +2578,18 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
+		/*for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next)
+			cout << tek->getSymbol() << " | " << tek->getNiz() << " | " << tek->getZnaci() << " | " << tek->getIK() << endl;
+
+		cout << endl;
+
+		for (Symbol_Table*tek = prvi; tek != nullptr; tek = tek->next) {
+			if (tek->getlg() == 'l' && tek->getSection() == 0 && tek->getName() != "UND") cout << "ERROR! LOCAL AND UNDEFINED! " << endl;
+			cout << tek->getRbr() << " | " << tek->getSection() << " | " << tek->getlg() << " | " << tek->getDefined() << " | " << tek->getValue() << " | " <<
+				tek->getSize() << " | " << tek->getName() << " | " << tek->getEqu() << " | " << tek->getMenjaj_Me_Linekru() << endl;
+		}
+		cout << endl;*/
+
 		//PROVERA INDEKSA KLASIFIKACIJE I BELEZENJE ZA KOJU SEKCIJU TREBA ICI RELOKACIONI
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			vector<string> s1 = tek->getNizBukvalno();
@@ -2758,6 +2772,31 @@ int main(int argc, char* argv[]) {
 			}
 		}
 		cout << endl;
+
+		ofstream outdata;
+
+		outdata.open(argv[2]); // opens the file
+		if (!outdata) { // file couldn't be opened
+			cerr << "Error: file could not be opened" << endl;
+			exit(1);
+		}
+
+
+		for (Symbol_Table*tek = prvi; tek != nullptr; tek = tek->next) {
+			if (tek->getSize() != 0) {
+				outdata << tek->getName() << ": ";
+				for (int i = 0; i < tek->kod.size(); i++) {
+					outdata << tek->kod[i];
+				}
+				outdata << endl;
+			}
+		}
+		outdata << endl;
+
+
+
+		outdata.close();
+
 		inFile.close();
 	
 	}
