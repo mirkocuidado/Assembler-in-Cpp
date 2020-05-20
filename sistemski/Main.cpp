@@ -659,8 +659,9 @@ int main(int argc, char* argv[]) {
 								Symbol_Table* pom = isInSymbol_Table(s1);
 								if (pom != nullptr) {
 									if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE GLOBAL" + item[i];
-									for (int i = 0; i < eksterni.size(); i++) if (eksterni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i];
-									else { pom->setlg('g'); globalni.push_back(s1); }
+									for (int i = 0; i < eksterni.size(); i++) { if (eksterni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i]; }
+									 pom->setlg('g');
+									 globalni.push_back(s1); 
 								}
 								else {
 									add(s1, -5, 'g', false, 0, 0);
@@ -707,8 +708,8 @@ int main(int argc, char* argv[]) {
 								if (pom != nullptr) {
 									if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE GLOBAL" + item[i];
 									if (pom->getDefined() == true) throw "SYMBOL CAN'T BE DEFINED!" + item[i];
-									for (int i = 0; i < globalni.size(); i++) if (globalni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i];
-									else { pom->setlg('g'); eksterni.push_back(s1); }
+									for (int i = 0; i < globalni.size(); i++) { if (globalni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i]; }
+									pom->setlg('g'); eksterni.push_back(s1); 
 								}
 								else {
 									add(s1, 0, 'g', false, 0, 0);
@@ -784,14 +785,16 @@ int main(int argc, char* argv[]) {
 							// AKO JE I OD SIMBOLA, ONDA DODAJ NOVI ZAPIS ZA EQU TABELU
 							if (flag == 0) {
 								if (pom == nullptr) {
-									add(s1, -2, 'l', true, izraz, 0);
+									add(s1, 0, 'l', true, izraz, 0);
 									posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
+									posl->setEqu();
 								}
 								else {
 									pom->setDefined(true);
 									pom->setValue(izraz);
-									pom->setSection(-2);
+									pom->setSection(0);
 									pom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
+									pom->setEqu();
 								}
 
 								addE(s1, nizI, niz, nizZ, znak);
@@ -895,7 +898,6 @@ int main(int argc, char* argv[]) {
 									br++;
 									while (item[i][br] == ' ') br++;
 									while (item[i][br] != ' ' && item[i][br] != '\n') s2 += item[i][br++];
-									br++;
 									while (item[i][br] == ' ') br++;
 									if (item[i][br] != '\n') throw "ERROR WITH SPACE! " + item[i];
 
@@ -2012,15 +2014,15 @@ int main(int argc, char* argv[]) {
 							// BRANCHES
 							if (lucky == "") {
 
-
-								if (s1 == "CALL") lucky += "00100100";
+								if (s1 == "INT") lucky += "00011100";
+								else if (s1 == "CALL") lucky += "00100100";
 								else if (s1 == "JMP") lucky += "00101100";
 								else if (s1 == "JEQ") lucky += "00110100";
 								else if (s1 == "JNE") lucky += "00111100";
 								else if (s1 == "JGT") lucky += "01000100";
 
 								if (lucky != "") {
-									if (pazi == 1) throw "You can't use branches with B sufix! " + item[i];
+									if (pazi == 1 && s1!="INT") throw "You can't use branches with B sufix! " + item[i];
 									if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION! " + item[i];
 
 									// IMMED
@@ -2034,11 +2036,15 @@ int main(int argc, char* argv[]) {
 										lucky += "00000000"; // 2. bajt
 
 										if (regex_match(s2, numberr)) {
-											if (stoi(s2) > 0) {
+											if (s1 == "INT" && pazi==1 && (stoi(s2) < 128 && stoi(s2) >=0)) { lucky[5] = '0'; lucky += decToBinary(stoi(s2), 1); }
+											else if (s1 == "INT" && pazi == 1 && (stoi(s2) > 128 || stoi(s2) <0)) throw "CAN'T USE SUFIX b HERE!";
+
+											if (stoi(s2) > 0 && pazi!=1) {
 												if (stoi(s2) < 32767)
 													lucky += decToBinary(stoi(s2), 2);
 												else throw "OPERAND TOO BIG! " + item[i];
 											}
+											else if (pazi == 1) {}
 											else throw "CAN'T USE NEGATIVE NUMBERS! " + item[i];
 										}
 										else {
@@ -2071,8 +2077,14 @@ int main(int argc, char* argv[]) {
 
 											lucky += "001"; //regdir
 
-											if (s2.size() == 2 || s2 == "PSW" || s2 == "psw")
+											if (s2.size() == 2 || s2 == "PSW" || s2 == "psw") {
+												if (pazi == 1) throw "ERROR! " + item[i];
 												lucky += getReg(s2);
+											}
+											else if (pazi==1 && (s2.size() == 3 || s2.size() == 4)) {
+												lucky[5] = '0';
+												lucky += getRegKRACI(s2);
+											}
 											else throw "ILLEGAL REGISTER! " + item[i];
 
 											LC += lucky.size() / 8;
@@ -2093,6 +2105,8 @@ int main(int argc, char* argv[]) {
 												}
 
 												lucky += "010"; //regind
+
+												if (pazi != 2) lucky[5] = '0'; // za INT
 
 												if (s2.size() == 2 || s2 == "PSW" || s2 == "psw")
 													lucky += getReg(s2);
@@ -2125,8 +2139,15 @@ int main(int argc, char* argv[]) {
 												}
 												else {
 													if (stoi(s3) > 0) {
-														if (stoi(s3) > 32767) throw "OPERAND TOO BIG! " + item[i];
-														lucky += decToBinary(stoi(s3), 2);
+														if (s1 == "INT" && pazi==1 && stoi(s3) < 128 && stoi(s3) >0) {
+															lucky[5] = '0';
+															lucky += decToBinary(stoi(s3), 1);
+														}
+														else if (s1 == "INT" && pazi == 1 && stoi(s3) >= 128) {
+															throw "CAN'T USE SUFIX B AND THIS VALUE! " + item[i];
+														}
+														else if (stoi(s3) > 32767) throw "OPERAND TOO BIG! " + item[i];
+														else lucky += decToBinary(stoi(s3), 2);
 													}
 													else throw "CAN'T USE NEGATIVE NUMBER - memdir! " + item[i];
 												}
@@ -2139,6 +2160,8 @@ int main(int argc, char* argv[]) {
 												br++;
 
 												lucky += "011";
+
+												if (pazi == 1) throw "CAN'T USE SUFIXES HERE! " + item[i]; // za INT
 
 												if (item[i][br] == '%') {
 													br++;
@@ -2307,7 +2330,7 @@ int main(int argc, char* argv[]) {
 					}
 				}
 				else {
-					int v = atoi(s1[i].c_str());
+					int v = atoi(s1[i].c_str()); // int v = stoi(s1[i]); vrednost += v; ali ne smem da rizikujem
 
 					if (s2[i] == "-") {
 						vrednost -= v;
@@ -2321,7 +2344,9 @@ int main(int argc, char* argv[]) {
 			if (tek->getIK() != 0 && tek->getIK() != -1) {
 				addR(tek->getIK(), ulaz_za_simbol, "EQU_REL");
 			}
-			if (tek->getIK() == -1) { isInSymbol_Table(tek->getSymbol())->setSection(-2); } //apsolutan signal koji nema sekciju!
+			if (tek->getIK() == -1) { isInSymbol_Table(tek->getSymbol())->setSection(0); } 
+			//apsolutan signal koji nema sekciju! ide u UND sekciju i linker posle nece traziti po drugim fajlovima njega i pokusavati da ga upari, jer ce mu 
+			//isEqu biti na vrednosti 1
 			else {
 				isInSymbol_Table(tek->getSymbol())->setSection(tek->getIK()); isInSymbol_Table(tek->getSymbol())->setlg('g');
 			}
@@ -2375,7 +2400,7 @@ int main(int argc, char* argv[]) {
 			if (pom == nullptr) {
 				cout << "ERROR! NOT IN TABLE!" << endl;
 			}
-			else if (pom->getlg() == 'l') {
+			else if (pom->getlg() == 'l' || (pom->getEqu() && pom->getSection() == 0 && pom->getlg()=='g' && pom->getDefined()) ) {
 				int a = tek->getSectionNumber();
 				Symbol_Table* c = getCodeNumberMain(a);
 
@@ -2399,12 +2424,13 @@ int main(int argc, char* argv[]) {
 					c->changeCode(tek->getPatch(), s1);
 					c->changeCode(tek->getPatch() + 1, s2);
 				}
-
-				if (tek->getLinker() != 0 || tek->getIma_Pomeraj()) {
-					addR(a, tek->getPatch(), "PCrel");
-					poslR->setLinker(tek->getLinker());
+				if (pom->getlg()=='l') {
+					if (tek->getLinker() != 0 || tek->getIma_Pomeraj()) {
+						addR(a, tek->getPatch(), "PCrel");
+						poslR->setLinker(tek->getLinker());
+					}
+					else addR(a, tek->getPatch(), "direct");
 				}
-				else addR(a, tek->getPatch(), "direct");
 			}
 			else {
 				if (tek->getLinker() != 0 || tek->getIma_Pomeraj()) {

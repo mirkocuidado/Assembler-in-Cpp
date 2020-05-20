@@ -1,21 +1,10 @@
-.section pom:    
-.global a,b,c
-.word bleja
-.skip 1
-.section pom2:
-MOV $500, %R1
-.extern d,e,f
-a: .skip 2
-b: .byte 5
-bleja: 
-MOV $5, %R1
-.skip 1
-.section pom:
-lokal: .skip 3
-MOV $5, %R1
-c:
-.word 20
-.word a, b, c
-MOV a, 6
-.word lokal
+.section sekcija:
+
+.equ a, -5
+
+.global a
+
+PUSH $a
+
+
 .end
