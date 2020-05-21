@@ -1,10 +1,6 @@
 .section sekcija:
 
-.equ a, -5
-
-.global a
-
-PUSH $a
-
+a:
+MOVB $a , (%R1)
 
 .end

@@ -1,9 +1,10 @@
 Number    Section   L/G       Defined   Value     Size      Name      Equ       Linker    
 0         0         l         1         0         0         UND       0         MENJAJ ME 
 1         1         l         1         0         4         sekcija   0         MENJAJ ME 
-2         0         g         1         -5        0         a         1         NE MENJAJ ME!
+2         1         l         1         0         0         a         0         MENJAJ ME 
 
 Number    Section/Symbol      Address/For Symbol  Way                 Linker    
+1         1                   2                   direct              0         
 
-sekcija: 4C 00 FB FF 
+sekcija: 60 00 00 42 
 

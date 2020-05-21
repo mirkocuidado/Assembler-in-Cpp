@@ -785,14 +785,14 @@ int main(int argc, char* argv[]) {
 							// AKO JE I OD SIMBOLA, ONDA DODAJ NOVI ZAPIS ZA EQU TABELU
 							if (flag == 0) {
 								if (pom == nullptr) {
-									add(s1, 0, 'l', true, izraz, 0);
+									add(s1, -5, 'l', true, izraz, 0);
 									posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
 									posl->setEqu();
 								}
 								else {
 									pom->setDefined(true);
 									pom->setValue(izraz);
-									pom->setSection(0);
+									pom->setSection(-5);
 									pom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
 									pom->setEqu();
 								}
@@ -1106,15 +1106,27 @@ int main(int argc, char* argv[]) {
 											}
 										}
 										else {
-											lucky += "0000000000";
-											lucky[5] = '1';
-											Symbol_Table* pom = isInSymbol_Table(s2);
-											if (pom == nullptr) {
-												add(s2, -5, 'l', false, 0, 0);
+											if (pazi == 1) {
+												lucky += "0000000000";
+												Symbol_Table* pom = isInSymbol_Table(s2);
+												if (pom == nullptr) {
+													add(s2, -5, 'l', false, 0, 0);
+												}
+												int a = LC + 2;
+												lucky += "00000000";
+												addF(a, s2, BROJ_SEKCIJE, SEKCIJA, 'b');
 											}
-											int a = LC + 2;
-											lucky += "0000000000000000";
-											addF(a, s2, BROJ_SEKCIJE, SEKCIJA, 'w');
+											else {
+												lucky += "0000000000";
+												lucky[5] = '1';
+												Symbol_Table* pom = isInSymbol_Table(s2);
+												if (pom == nullptr) {
+													add(s2, -5, 'l', false, 0, 0);
+												}
+												int a = LC + 2;
+												lucky += "0000000000000000";
+												addF(a, s2, BROJ_SEKCIJE, SEKCIJA, 'w');
+											}
 										}
 
 										if (item[i][br] == '$') throw "CAN'T USE IMMED HERE! " + item[i];
@@ -2344,11 +2356,11 @@ int main(int argc, char* argv[]) {
 			if (tek->getIK() != 0 && tek->getIK() != -1) {
 				addR(tek->getIK(), ulaz_za_simbol, "EQU_REL");
 			}
-			if (tek->getIK() == -1) { isInSymbol_Table(tek->getSymbol())->setSection(0); } 
-			//apsolutan signal koji nema sekciju! ide u UND sekciju i linker posle nece traziti po drugim fajlovima njega i pokusavati da ga upari, jer ce mu 
+			if (tek->getIK() == -1) { isInSymbol_Table(tek->getSymbol())->setSection(-5); } 
+			//apsolutan signal koji nema sekciju! ide u 0/-5 sekciju JER JE LEPSE i linker posle nece traziti po drugim fajlovima njega i pokusavati da ga upari, jer ce mu 
 			//isEqu biti na vrednosti 1
 			else {
-				isInSymbol_Table(tek->getSymbol())->setSection(tek->getIK()); isInSymbol_Table(tek->getSymbol())->setlg('g');
+				isInSymbol_Table(tek->getSymbol())->setSection(tek->getIK());
 			}
 
 			isInSymbol_Table(tek->getSymbol())->setValue(vrednost);
@@ -2361,46 +2373,21 @@ int main(int argc, char* argv[]) {
 		}
 
 
-
-
-
-
-
-
-
-
-
-		// ISPIS EQU
-		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next)
-			cout << tek->getSymbol() << " | " << tek->getNiz() << " | " << tek->getZnaci() << " | " << tek->getIK() << endl;
-
-		cout << endl;
-
-		for (Symbol_Table*tek = prvi; tek != nullptr; tek = tek->next) {
-			if (tek->getlg() == 'l' && tek->getSection() == -5) cout << "ERROR! LOCAL AND UNDEFINED! " << endl;
-			cout << tek->getRbr() << " | " << tek->getSection() << " | " << tek->getlg() << " | " << tek->getDefined() << " | " << tek->getValue() << " | " <<
-				tek->getSize() << " | " << tek->getName() << " | " << tek->getEqu() << " | " << tek->getMenjaj_Me_Linekru() << endl;
-		}
-		cout << endl;
-
-		for (Reloc_Table* tek = prviR; tek != nullptr; tek = tek->next) {
-			cout << tek->getRbr() << " | " << tek->getSym() << " | " << tek->getAdress() << " | " << tek->getWay() << endl;
-		}
-		cout << endl;
-
-		for (For_Table* tek = prviF; tek != nullptr; tek = tek->next) {
-			cout << tek->getPatch() << " | " << tek->getSize() << " | " << tek->getSymbol() << " | " << tek->getSekcija_U_Kojoj_Je_Nastao_Skok() << " | " << tek->getIsSkok() << " | " << tek->getIma_Pomeraj() << " | " << tek->getLinker() << endl;
-		}
-		cout << endl;
-
-
 		// RAZRESAVANJE TABELE OBRACANJA UNAPRED!
 		for (For_Table* tek = prviF; tek != nullptr; tek = tek->next) {
 			Symbol_Table* pom = isInSymbol_Table(tek->getSymbol());
 			if (pom == nullptr) {
 				cout << "ERROR! NOT IN TABLE!" << endl;
 			}
-			else if (pom->getlg() == 'l' || (pom->getEqu() && pom->getSection() == 0 && pom->getlg()=='g' && pom->getDefined()) ) {
+			else if (pom->getlg() == 'l' && pom->getEqu() && pom->getSection() == 0) {
+				int b = pom->getRbr();
+				addR(b, tek->getPatch(), "direct");
+			}
+			else if (pom->getlg() == 'g' && pom->getEqu() && pom->getSection() == 0) {
+				int b = pom->getRbr();
+				addR(b, tek->getPatch(), "direct");
+			}
+			else if (pom->getlg() == 'l') {
 				int a = tek->getSectionNumber();
 				Symbol_Table* c = getCodeNumberMain(a);
 
@@ -2424,6 +2411,15 @@ int main(int argc, char* argv[]) {
 					c->changeCode(tek->getPatch(), s1);
 					c->changeCode(tek->getPatch() + 1, s2);
 				}
+				// ako je simbol local, EQU i pripada UNDEF, mora relokacioni za EQU, jer linker mora da nadje eksterni simbol od kog ovaj EQU simbol zavisi, a  za koriscenje ce ici zapis ka simbolu
+				// ako je simbol local, EQU i ne pripada UNDEF sekciji, ne treba relokacioni za EQU, jer ga linker ne koristi izvan, ali treba za koriscenje ka sekciji
+				// ako je simbol local, nije EQU i pripada UNDEF, to je nemoguca situacija ( bice u -5, a ne u 0 )
+				// ako je simbol local, nije EQU i ne pripada UNDEF, to je normalna situacija gde ide relokacioni za koriscenje ka sekciji
+
+				// ako je simbol global, EQU i pripada UNDEF, mora relokacioni za EQU, jer linker mora da nadje eksterni simbol od kog ovaj EQU simbol zavisi, a za koriscenje ide ka simbolu
+				// ako je simbol global, EQU i ne pripada UNDEF sekciji, treba relokacioni za EQU, jer ga linker koristi izvan u nekom drugom fajlu, a za koriscenje ka simbolu
+				// ako je simbol global, nije EQU i pripada UNDEF, tad nije EQU i nema zapis za EQU, ali ide zapis za koriscenje ka simbolu
+				// ako je simbol global, nije EQU i ne pripada UNDEF, to je normalna situacija gde ide relokacioni za koriscenje ka simbolu
 				if (pom->getlg()=='l') {
 					if (tek->getLinker() != 0 || tek->getIma_Pomeraj()) {
 						addR(a, tek->getPatch(), "PCrel");
@@ -2450,39 +2446,22 @@ int main(int argc, char* argv[]) {
 		}
 
 		outdata << left;
-		outdata << setw(10) << "Number"
-			<< setw(10) << "Section"
-			<< setw(10) << "L/G"
-			<< setw(10) << "Defined"
-			<< setw(10) << "Value"
-			<< setw(10) << "Size"
-			<< setw(10) << "Name"
-			<< setw(10) << "Equ"
-			<< setw(10) << "Linker"
-			<< setw(10) << endl;
+		outdata << setw(10) << "Number" << setw(10) << "Section" << setw(10) << "L/G" << setw(10) << "Defined"
+			<< setw(10) << "Value" << setw(10) << "Size" << setw(10) << "Name" << setw(10) << "Equ" << setw(10) << "Linker" << setw(10) << endl;
 
 		for (Symbol_Table*tek = prvi; tek != nullptr; tek = tek->next) {
-			if (tek->getlg() == 'l' && tek->getSection() == -5) cout << "ERROR! LOCAL AND UNDEFINED! " << endl;
+			if (tek->getlg() == 'l' && tek->getSection() == -5 && tek->getDefined() == false) throw "ERROR! LOCAL AND UNDEFINED! ";
 			outdata << left;
-			outdata << setw(10) << tek->getRbr() 
-					<< setw(10) << tek->getSection() 
-					<< setw(10) << tek->getlg() 
-					<< setw(10) << tek->getDefined() 
-					<< setw(10) << tek->getValue() 
-					<< setw(10) << tek->getSize() 
-					<< setw(10) << tek->getName() 
-					<< setw(10) << tek->getEqu() 
-					<< setw(10) << tek->getMenjaj_Me_Linekru()
-					<< setw(10) << endl;
+			outdata << setw(10) << tek->getRbr() << setw(10) << tek->getSection() 
+					<< setw(10) << tek->getlg() << setw(10) << tek->getDefined() 
+					<< setw(10) << tek->getValue() << setw(10) << tek->getSize() 
+					<< setw(10) << tek->getName() << setw(10) << tek->getEqu() 
+					<< setw(10) << tek->getMenjaj_Me_Linekru() << setw(10) << endl;
 		}
 		outdata << endl;
 
 		outdata << left;
-		outdata << setw(10) << "Number"
-			<< setw(20) << "Section/Symbol"
-			<< setw(20) << "Address/For Symbol"
-			<< setw(20) << "Way"
-			<< setw(10) << "Linker" << endl;
+		outdata << setw(10) << "Number" << setw(20) << "Section/Symbol" << setw(20) << "Address/For Symbol" << setw(20) << "Way" << setw(10) << "Linker" << endl;
 
 		for (Reloc_Table* tek = prviR; tek != nullptr; tek = tek->next) {
 			outdata << left;
@@ -2501,11 +2480,8 @@ int main(int argc, char* argv[]) {
 		}
 		outdata << endl;
 
-
 		outdata.close();
-
 		inFile.close();
-
 	}
 	catch (const char* m) {
 		cout << m << endl;
