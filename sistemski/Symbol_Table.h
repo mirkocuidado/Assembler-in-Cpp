@@ -25,7 +25,7 @@ private:
 
 public:
 	Symbol_Table* next;
-	std::array<string, 1000> kod;
+	vector<string> kod;
 
 public:
 	Symbol_Table() {
@@ -81,7 +81,7 @@ public:
 
 	void setCode(string s) {
 		s += " ";
-		kod[codeINDEX++] = s;
+		kod.push_back(s);
 	}
 
 	void changeCode(int i, string s) {

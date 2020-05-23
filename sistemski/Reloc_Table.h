@@ -14,6 +14,8 @@ private:
 	int adress;
 	int linker;
 	string way;
+	int section;
+	char sign;
 
 public:
 	Reloc_Table* next;
@@ -25,6 +27,8 @@ public:
 		way = w;
 		next = nullptr;
 		linker = 0;
+		sign = '+';
+		section = -10;
 	}
 
 	int getSym() { return sym_table_entry; }
@@ -32,12 +36,16 @@ public:
 	int getAdress() { return adress; }
 	int getRbr() { return rbr; }
 	int getLinker() { return linker; }
+	char getSign() { return sign; }
+	int getSection() { return section; }
 
 	void setSym(int s) { sym_table_entry = s; }
 	void setRbr(int r) { rbr = r; }
 	void setWay(string w) { way = w; }
 	void setAdress(int a) { adress = a; }
 	void setLinker(int l) { linker = l; }
+	void setSign(char c) { sign = c; }
+	void setSection(int ss) { section = ss; }
 
 	~Reloc_Table();
 };
