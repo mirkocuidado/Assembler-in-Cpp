@@ -14,11 +14,7 @@ private:
 	vector<string> niz;
 	vector<string> znaci;
 
-	// igranje za indeks klasifikacije
-
 	int indeks_klasifikacije;
-
-
 public:
 	Equ_Table* next;
 

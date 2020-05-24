@@ -1,9 +1,16 @@
 .section sekcija:
 p:
-.global a
 .extern b
-.equ a,5-b
+.global a
+.equ c,5
+.equ a,5+b
+
+.section klonja:
+.equ d, labela - labela + a
 PUSH $a
 PUSH a(%PC)
+labela:
+MOV labela, labela
+.global d
 
 .end

@@ -1,14 +1,21 @@
-Number    Section   L/G       Defined   Value     Size      Name      Equ       Linker    
-0         0         l         1         0         0         UND       0         MENJAJ ME 
-1         1         l         1         0         8         sekcija   0         MENJAJ ME 
-2         1         l         1         0         0         p         0         MENJAJ ME 
-3         0         g         1         5         0         a         1         NE MENJAJ ME!
-4         0         g         0         0         0         b         0         MENJAJ ME 
+Number    Section   L/G       Defined   Value     Size      Name      Equ       
+0         0         l         1         0         0         UND       0         
+1         1         l         1         0         0         sekcija   0         
+2         1         l         1         0         0         p         0         
+3         0         g         0         0         0         b         0         
+4         0         g         1         5         0         a         1         
+5         -5        l         1         5         0         c         1         
+6         6         l         1         0         15        klonja    0         
+7         6         l         1         8         0         labela    0         
+8         0         g         1         5         0         d         1         
 
-Number    Section/Symbol      Address/For Symbol  Way                 Linker    DEBIL     Sign      
-1         4                   3                   EQU_REL_EXTERN      0         -10       -         
-2         3                   2                   direct              0         1         +         
-3         3                   6                   direct              0         1         +         
+Number    Section/Symbol      Address/For Symbol  Way                 Linker    For Section    Sign      
+1         3                   4                   EQU_REL_EXTERN      0         EQU            +         
+2         3                   8                   EQU_REL_EXTERN      0         EQU            +         
+3         4                   2                   direct              0         6              +         
+4         4                   6                   direct              0         6              +         
+5         6                   10                  direct              0         6              +         
+6         6                   13                  direct              0         6              +         
 
-sekcija: 4C 00 00 00 4C 6E 00 00 
+klonja: 4C 00 00 00 4C 6E 00 00 60 80 08 00 80 08 00 
 

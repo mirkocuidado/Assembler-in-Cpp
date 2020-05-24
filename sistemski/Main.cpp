@@ -30,7 +30,6 @@ string binary_hexa(string s) {
 	string binToHex = "";
 	for (int j = 0; j < s.size(); j += 4) {
 		pom = s.substr(j, 4);
-		//cout << pom << endl;
 		if (!pom.compare("0000")) binToHex += "0";
 		else if (!pom.compare("0001")) binToHex += "1";
 		else if (!pom.compare("0010")) binToHex += "2";
@@ -135,13 +134,6 @@ string getRegKRACI(string s2) {
 	return luck;
 }
 
-bool is_number(const std::string& s)
-{
-	std::string::const_iterator it = s.begin();
-	while (it != s.end() && isdigit(*it)) ++it;
-	return !s.empty() && it == s.end();
-}
-
 Symbol_Table* isInSymbol_Table(string s) {
 	for (Symbol_Table* tek = prvi; tek != nullptr; tek = tek->next) {
 		if (tek->getName() == s) {
@@ -201,11 +193,11 @@ void addF(int p, string s, int sn, string sek, char ss = ' ') {
 	}
 }
 
-bool circle() {
+bool circle(regex numberr) {
 	for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 		vector<string> s1 = tek->getNizBukvalno();
 		for (int i = 0; i < s1.size(); i++) {
-			if (is_number(s1[i]) == false) {
+			if (regex_match(s1[i], numberr) == false) {
 				for (Equ_Table* tek2 = prviE; tek2 != nullptr; tek2 = tek2->next) {
 					if (tek2 != tek) {
 						if (tek2->getSymbol() == s1[i]) {
@@ -213,7 +205,6 @@ bool circle() {
 							int size2 = tek2->getNizSize();
 							for (int j = 0; j < size2; j++) {
 								if (s2[j] == tek->getSymbol()) {
-									//cout<< "ERROR! "<<tek->getSymbol()<<" "<<tek2->getSymbol()<<endl;
 									return true;
 								}
 							}
@@ -226,9 +217,38 @@ bool circle() {
 	return false;
 }
 
-void obrada(int i, int br) {
+void rewriteCode(Symbol_Table* pom, For_Table* tek, Symbol_Table* c) {
+	char vel = tek->getSize();
+	if (vel == 'b') {
+		if (pom->getValue() > 127 || pom->getValue() < -129) throw "Byte forward table element with size of Word. ";
+		string s = decToBinary(pom->getValue(), 1);
+		s = binary_hexa(s);
+		c->changeCode(tek->getPatch(), s);
+	}
+	else {
+		string s = decToBinary(pom->getValue(), 2);
+		s = binary_hexa(s);
+		string s1 = "";
+		string s2 = "";
 
+		for (int i = 0; i < s.size(); i++)
+			if (i <= 1) s1 += s[i];
+			else s2 += s[i];
+
+		c->changeCode(tek->getPatch(), s1);
+		c->changeCode(tek->getPatch() + 1, s2);
+	}
 }
+
+void process_move(string s4, int LC, int BROJ_SEKCIJE, string SEKCIJA, int pomerajLC) {
+	Symbol_Table* pom = isInSymbol_Table(s4);
+	if (pom == nullptr) {
+		add(s4, -5, 'l', false, 0, 0);
+	}
+	int av = LC + pomerajLC;
+	addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
+}
+
 int main(int argc, char* argv[]) {
 
 	try {
@@ -244,13 +264,10 @@ int main(int argc, char* argv[]) {
 			throw "FILE ERROR! ";
 			exit(1);
 		}
-
 		vector<string> globalni;
 		vector<string> eksterni;
-
 		vector<string> item;
 		string pom;
-		int i = 0;
 
 		string codeC = "";
 		int LC = 0;
@@ -267,25 +284,13 @@ int main(int argc, char* argv[]) {
 		int nizI = 0;
 		int nizZ = 0;
 
-		regex section("section");
-		regex end(".end\n");
-		regex byte("byte");
-		regex word("word");
-		regex skip("skip");
-		regex REGglobal("global");
-		regex REGextern("extern");
-		regex equ("equ");
 		regex numberr("^(\\+|-)?[0-9]+|(\\+|-)?(0x|0X)[0-9A-Fa-f]{2}|(\\+|-)?(0x|0X)[0-9A-Fa-f]{4}$");
 
 		while (getline(inFile, pom)) {
-			if (pom != "") {
-				item.push_back(pom);
-			}
+			if (pom != "") item.push_back(pom);
 			else continue;
 
-
 			int brr = item.size();
-
 			int i = brr - 1;
 			item[i] = lose_extra_white_space(item[i]);
 
@@ -304,15 +309,9 @@ int main(int argc, char* argv[]) {
 						jj++; // preskace :
 
 						while (item[i][jj] == ' ') jj++;
-						if (item[i][jj] == '\n') {
-							flag = 1;
-						}
-						else if (item[i][jj] == '.') {
-							flag = 2; isInstruction = false; daLiImamLabelu = true;
-						}
-						else {
-							flag = 2; isInstruction = true; daLiImamLabelu = true;
-						}
+						if (item[i][jj] == '\n') flag = 1;
+						else if (item[i][jj] == '.') { flag = 2; isInstruction = false; daLiImamLabelu = true; }
+						else { flag = 2; isInstruction = true; daLiImamLabelu = true; }
 						reseno = true;
 						break;
 					}
@@ -331,8 +330,6 @@ int main(int argc, char* argv[]) {
 						flag = 2; daLiImamLabelu = false; isInstruction = true;
 					}
 				}
-
-
 				while (item[i][jj] == ' ') jj++;
 			}
 			else { flag = 2; isInstruction = false; daLiImamLabelu = false; }
@@ -375,14 +372,12 @@ int main(int argc, char* argv[]) {
 						br = jj;
 					}
 					else br = 0;
-
-
 					while (item[i][br] == ' ') br++;
 
 					if (flag == 2 && isInstruction == false) {
-
 						string posleTacke = "";
 						br++;
+
 						while (item[i][br] != ' ' && item[i][br] != '\n') {
 							posleTacke += item[i][br];
 							br++;
@@ -397,8 +392,7 @@ int main(int argc, char* argv[]) {
 								sec->setSize(LC);
 								for (int i = 0; i < codeC.size(); i += 2) {
 									string u = "";
-									u += codeC[i];
-									u += codeC[i + 1];
+									u += codeC[i]; u += codeC[i + 1];
 									sec->setCode(u);
 								}
 								codeC = "";
@@ -421,8 +415,7 @@ int main(int argc, char* argv[]) {
 								pom->setSize(LC);
 								for (int i = 0; i < codeC.size(); i += 2) {
 									string u = "";
-									u += codeC[i];
-									u += codeC[i + 1];
+									u += codeC[i]; u += codeC[i + 1];
 									pom->setCode(u);
 								}
 								codeC = "";
@@ -436,7 +429,6 @@ int main(int argc, char* argv[]) {
 								LC = sec->getSize();
 								BROJ_SEKCIJE = sec->getRbr();
 								codeC = "";
-
 							}
 							else {
 								add(SEKCIJA, -1, 'l', true, 0, 0);
@@ -445,15 +437,10 @@ int main(int argc, char* argv[]) {
 								BROJ_SEKCIJE = posl->getSection();
 							}
 
-							if (item[i][br] == '\n') {
-								cout << "Sekcija " << s1 << endl;
-							}
-							else {
-								throw "Error while reading .section " + item[i];
-							}
+							if (item[i][br] != '\n') throw "Error while reading .section " + item[i];
+							
 						}
 						else if (posleTacke == "byte") {
-
 							if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION!";
 
 							string s1 = "";
@@ -491,31 +478,18 @@ int main(int argc, char* argv[]) {
 									}
 									else {
 										Symbol_Table* pomm = isInSymbol_Table(s1);
+										codeC += "00";
 										if (pomm != nullptr) {
-											if (pomm->getDefined() == true) {
-												if (pomm->getlg() == 'g') {
-													codeC += "00";
-													addR(pomm->getRbr(), LC, "direct");
-												}
-												else {
-													codeC += "00";
-													addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'b');
-												}
-											}
-											else {
-												codeC += "00";
-												addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'b');
-											}
+											if (pomm->getDefined() == true && pomm->getlg() == 'g') addR(pomm->getRbr(), LC, "direct");
+											else if(pomm->getlg()=='l') addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'b');
 										}
 										else {
 											add(s1, -5, 'l', false, 0, 0);
 											addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'b');
-											codeC += "00";
 										}
 									}
 									LC += 1;
 								}
-
 								s1 = "";
 							}
 							if (ima_param == false) throw ".byte ERROR " + item[i];
@@ -559,28 +533,13 @@ int main(int argc, char* argv[]) {
 									}
 									else {
 										Symbol_Table* pomm = isInSymbol_Table(s1);
+										codeC += "0000";
 										if (pomm != nullptr) {
-											if (pomm->getDefined() == true) {
-												if (pomm->getlg() == 'g') {
-													codeC += "0000";
-
-													addR(pomm->getRbr(), LC, "direct");
-												}
-												else {
-													codeC += "0000";
-													addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'w');
-												}
-											}
-											else {
-												codeC += "0000";
-												if (pomm->getlg() != 'g') {
-													addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'w');
-												}
-											}
+											if (pomm->getDefined() == true && pomm->getlg() == 'g') addR(pomm->getRbr(), LC, "direct");
+											else if(pomm->getlg()=='l') addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'w');
 										}
 										else {
 											add(s1, -5, 'l', false, 0, 0);
-											codeC += "0000";
 											addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'w');
 										}
 									}
@@ -593,7 +552,6 @@ int main(int argc, char* argv[]) {
 						}
 						// SKIP
 						else if (posleTacke == "skip") {
-
 							if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION!";
 
 							string s1 = "";
@@ -615,13 +573,10 @@ int main(int argc, char* argv[]) {
 										for (int i = 0; i < a; i++) {
 											codeC += "00";
 										}
-
-										cout << "LC = " << LC << endl;
 									}
 									else throw "NOT A NUMBER + .skip " + item[i];
 								}
 								else throw ".skip symbol ERROR " + item[i];
-								//s1 = "";
 							}
 							if (s1 == "") throw ".skip symbol ERROR " + item[i];
 						}
@@ -655,20 +610,16 @@ int main(int argc, char* argv[]) {
 							if (regex_match(s1, numberr)) throw ".global + number ERROR " + item[i];
 
 							if (s1 != "") {
+								globalni.push_back(s1);
 								ima_param = true;
 								Symbol_Table* pom = isInSymbol_Table(s1);
 								if (pom != nullptr) {
 									if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE GLOBAL" + item[i];
 									for (int i = 0; i < eksterni.size(); i++) { if (eksterni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i]; }
 									 pom->setlg('g');
-									 globalni.push_back(s1); 
 								}
-								else {
-									add(s1, -5, 'g', false, 0, 0);
-									globalni.push_back(s1);
-								}
+								else add(s1, -5, 'g', false, 0, 0);
 							}
-
 							s1 = "";
 						}
 						if (ima_param == false) throw ".global ERROR " + item[i];
@@ -676,51 +627,49 @@ int main(int argc, char* argv[]) {
 						}  // dodati jos LC i broj sekcije
 						// EXTERN: dodati jos LC i broj sekcije
 						else if (posleTacke == "extern") {
-						string s1 = "";
+							string s1 = "";
 
-						bool ima_param = false;
-						bool zarez = false;
+							bool ima_param = false;
+							bool zarez = false;
 
-						while (item[i][br] != '\n') {
-							while (item[i][br] == ' ') br++;
-							while (item[i][br] != ',' && item[i][br] != '\n') {
-								if (s1 != "" && item[i][br] == ' ') {
-									while (item[i][br] == ' ') br++;
-									if (item[i][br] == ',' || item[i][br] == '\n') break;
-									else throw "ERROR! " + item[i];
+							while (item[i][br] != '\n') {
+								while (item[i][br] == ' ') br++;
+								while (item[i][br] != ',' && item[i][br] != '\n') {
+									if (s1 != "" && item[i][br] == ' ') {
+										while (item[i][br] == ' ') br++;
+										if (item[i][br] == ',' || item[i][br] == '\n') break;
+										else throw "ERROR! " + item[i];
+									}
+									s1 += item[i][br];
+									zarez = false;
+									br++;
 								}
-								s1 += item[i][br];
-								zarez = false;
-								br++;
-							}
 
-							if (item[i][br] == ',' && s1 == "") throw " ',' error! " + item[i];
-							if (item[i][br] == ',' && s1 != "") zarez = true;
-							if (item[i][br] == '\n' && zarez == true && ima_param == true) throw "ERROR!!! " + item[i];
-							if (item[i][br] != '\n')
-								br++;
+								if (item[i][br] == ',' && s1 == "") throw " ',' error! " + item[i];
+								if (item[i][br] == ',' && s1 != "") zarez = true;
+								if (item[i][br] == '\n' && zarez == true && ima_param == true) throw "ERROR!!! " + item[i];
+								if (item[i][br] != '\n')
+									br++;
 
-							if (regex_match(s1, numberr)) throw ".extern + number ERROR " + item[i];
+								if (regex_match(s1, numberr)) throw ".extern + number ERROR " + item[i];
 
-							if (s1 != "") {
-								ima_param = true;
-								Symbol_Table* pom = isInSymbol_Table(s1);
-								if (pom != nullptr) {
-									if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE GLOBAL" + item[i];
-									if (pom->getDefined() == true) throw "SYMBOL CAN'T BE DEFINED!" + item[i];
-									for (int i = 0; i < globalni.size(); i++) { if (globalni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i]; }
-									pom->setlg('g'); eksterni.push_back(s1); 
-								}
-								else {
-									add(s1, 0, 'g', false, 0, 0);
+								if (s1 != "") {
 									eksterni.push_back(s1);
+									ima_param = true;
+									Symbol_Table* pom = isInSymbol_Table(s1);
+									if (pom != nullptr) {
+										if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE GLOBAL" + item[i];
+										if (pom->getDefined() == true) throw "SYMBOL CAN'T BE DEFINED!" + item[i];
+										for (int i = 0; i < globalni.size(); i++) { if (globalni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i]; }
+										pom->setlg('g');  
+									}
+									else add(s1, 0, 'g', false, 0, 0);
+								
 								}
+								s1 = "";
 							}
-
-							s1 = "";
-						}
-						if (ima_param == false) throw ".extern ERROR " + item[i];
-						if (item[i][br - 1] == ',') throw ".extern ERROR " + item[i];
+							if (ima_param == false) throw ".extern ERROR " + item[i];
+							if (item[i][br - 1] == ',') throw ".extern ERROR " + item[i];
 						}
 						else if (posleTacke == "equ") {
 							string s2 = "";
@@ -745,7 +694,6 @@ int main(int argc, char* argv[]) {
 							}
 
 							string pomocni = "";
-
 							for (int i = 0; i < s2.size(); i++) {
 								if (s2[i] != '+' && s2[i] != '-' && s2[i] != '\n') {
 									if (s2[i] != ' ')
@@ -753,7 +701,7 @@ int main(int argc, char* argv[]) {
 								}
 								else {
 									znak[nizZ++] = s2[i];
-									if (pomocni == "" && i != 0) cout << "GRESKA!" << endl;
+									if (pomocni == "" && i != 0) throw "ERROR! " + item[i];
 									else if (pomocni != "") {
 										niz[nizI++] = pomocni;
 										pomocni = "";
@@ -762,22 +710,15 @@ int main(int argc, char* argv[]) {
 							}
 
 							niz[nizI++] = pomocni;
-
 							int izraz = 0;
-
 							int flag = 0;
 
 							for (int i = 0; i < nizI; i++) {
-								if (regex_match(niz[i], numberr)) {
-									izraz += stoi(niz[i]);
-								}
+								if (regex_match(niz[i], numberr)) izraz += stoi(niz[i]);
 								else {
 									flag = 1;
 									Symbol_Table* pompom = isInSymbol_Table(niz[i]);
-									if (pompom == nullptr) {
-										add(niz[i], 0, 'l', false, 0, 0);
-										//posl->setMenjaj_Me_Linekru("NE MENJAJ ME!"); NE TREBA OVO!!!
-									}
+									if (pompom == nullptr) add(niz[i], 0, 'l', false, 0, 0);
 								}
 							}
 
@@ -786,35 +727,28 @@ int main(int argc, char* argv[]) {
 							if (flag == 0) {
 								if (pom == nullptr) {
 									add(s1, -5, 'l', true, izraz, 0);
-									posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
 									posl->setEqu();
 								}
 								else {
 									pom->setDefined(true);
 									pom->setValue(izraz);
 									pom->setSection(-5);
-									pom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
 									pom->setEqu();
 								}
 
 								addE(s1, nizI, niz, nizZ, znak);
-								cout << izraz << endl;
 							}
 							else {
 								if (pom == nullptr) {
 									add(s1, -5, 'l', true, 0, 0);
 									posl->setEqu();
-									posl->setMenjaj_Me_Linekru("NE MENJAJ ME!");
 								}
 								else {
 									pom->setEqu(); //NE TREBA OVO JA MSM
-									pom->setMenjaj_Me_Linekru("NE MENJAJ ME!");
 									pom->setDefined(true);
 									pom->setSection(-5);
 								}
-
 								addE(s1, nizI, niz, nizZ, znak);
-
 							}
 
 							izraz = 0;
@@ -844,44 +778,33 @@ int main(int argc, char* argv[]) {
 							codeC += "00";
 
 							while (item[i][br] == ' ' || item[i][br] == '\t') br++;
-							if (item[i][br] == '\n') continue;
-							else throw "ERROR WITH OPERANDS! " + item[i];
-
+							if (item[i][br] == '\n') continue; else throw "ERROR WITH OPERANDS! " + item[i];
 						}
 						else if (s1 == "IRET") {
 							LC++;
 							codeC += "08";
 
-							while (item[i][br] == ' ' || item[i][br] == '\t') br++;
-							if (item[i][br] == '\n') continue;
-							else throw "ERROR WITH OPERANDS! " + item[i];
+							while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] == '\n') continue; else throw "ERROR WITH OPERANDS! " + item[i];
 						}
 						else if (s1 == "RET") {
 							LC++;
 							codeC += "10";
 
-							while (item[i][br] == ' ' || item[i][br] == '\t') br++;
-							if (item[i][br] == '\n') continue;
-							else throw "ERROR WITH OPERANDS! " + item[i];
+							while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] == '\n') continue;= else throw "ERROR WITH OPERANDS! " + item[i];
 						}
 						else {
 
 							if (s1.size() == 4 || s1.size() == 5) {
-								if (s1[s1.size() - 1] == 'B') pazi = 1;
-								else if (s1[s1.size() - 1] == 'W') pazi = 2;
+								if (s1[s1.size() - 1] == 'B') pazi = 1; else if (s1[s1.size() - 1] == 'W') pazi = 2;
 							}
 							else if (s1.size() == 3) {
 								if (s1 != "SUB") {
-									if (s1[s1.size() - 1] == 'B') pazi = 1;
-									else if (s1[s1.size() - 1] == 'W') pazi = 2;
+									if (s1[s1.size() - 1] == 'B') pazi = 1; else if (s1[s1.size() - 1] == 'W') pazi = 2;
 								}
 							}
 							if (pazi != 0) {
 								string pom = "";
-								for (int i = 0; i < s1.size() - 1; i++) {
-									pom += s1[i];
-								}
-
+								for (int i = 0; i < s1.size() - 1; i++) pom += s1[i];
 								s1 = pom;
 							}
 
@@ -963,19 +886,15 @@ int main(int argc, char* argv[]) {
 											if (item[i][br] != '\n') throw "ERROR WITH SPACE - regind! " + item[i];
 										}
 
-										lucky += "100";
-										lucky += "010";
+										lucky += "100"; lucky += "010";
 
-										if (s2.size() == 2 || s2 == "PSW")
-											lucky += getReg(s2);
-										else throw "CAN'T USE h or l HERE! " + item[i];
+										if (s2.size() == 2 || s2 == "PSW") lucky += getReg(s2); else throw "CAN'T USE h or l HERE! " + item[i];
 									}
 									else throw "( AND NO %! " + item[i];
 
 									LC += (lucky.size() / 8);
 									codeC += binary_hexa(lucky);
 								}
-
 								else {
 									if (pazi == 1) throw "CAN'T BE B AND REGDIR! " + item[i];
 
@@ -984,40 +903,22 @@ int main(int argc, char* argv[]) {
 									if (item[i][br] == ' ' || item[i][br] == '\n') {
 										while (item[i][br] == ' ' && item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
 
-										if (regex_match(s4, numberr) == false && s4[0]!='0' && s4[1]!='x') {
-											Symbol_Table* pom = isInSymbol_Table(s4);
-											if (pom == nullptr) {
-												add(s4, -5, 'l', false, 0, 0);
-											}
-											int av = LC + 2;
-											addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
-										}
+										if (regex_match(s4, numberr) == false && s4[0] != '0' && s4[1] != 'x') 
+											process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 2);
 
 										lucky += "100";
 										lucky += "10000000";
 
-										if (regex_match(s4, numberr)) {
-											if (stoi(s4,nullptr,0) > 0)
-												lucky += decToBinary(stoi(s4,nullptr,0), 2);
-											else throw "CAN'T BE NEGATIVE + MEMDIR! " + item[i];
-										}
-										else {
-											lucky += "0000000000000000";
-										}
+										if (regex_match(s4, numberr)) lucky += decToBinary(stoi(s4,nullptr,0), 2);
+										else lucky += "0000000000000000";
 
 									}
 									//regindpom
 									else if (item[i][br] == '(') {
 										br++;
 
-										if (regex_match(s4, numberr) == false && s4[0] != '0' && s4[1] != 'x') {
-											Symbol_Table* pom = isInSymbol_Table(s4);
-											if (pom == nullptr) {
-												add(s4, -5, 'l', false, 0, 0);
-											}
-											int av = LC + 2;
-											addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
-										}
+										if (regex_match(s4, numberr) == false && s4[0] != '0' && s4[1] != 'x')
+											process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 2);
 
 										lucky += "100011";
 										if (item[i][br] == '%') {
@@ -1032,16 +933,15 @@ int main(int argc, char* argv[]) {
 										if (regex_match(s4, numberr)) {
 											lucky += decToBinary(stoi(s4, nullptr, 0), 2);
 											int m = stoi(s4,nullptr,0);
-											if (s2 == "PC" || s2 == "pc" || s2 == "r7" || s2 == "R7") throw "PC only with NUMBERS! " + item[i];
+											if (s2 == "PC" || s2 == "pc" || s2 == "r7" || s2 == "R7") throw "PC only with non NUMBERS! " + item[i];
 										}
 										else {
 											if (s2 == "PC" || s2 == "pc" || s2 == "r7" || s2 == "R7") {
 
 												poslF->setLinker(-2);
 												poslF->setIma_Pomeraj();
-												lucky += "0000000000000000";
 											}
-											else lucky += "0000000000000000";
+											lucky += "0000000000000000";
 										}
 
 									}
@@ -1072,6 +972,9 @@ int main(int argc, char* argv[]) {
 								if (lucky != "") {
 									// IMMED
 									if (item[i][br] == '$') {
+
+										if (s1 == "XCHG") throw "XCHG can't go with immed! " + item[i];
+
 										br++;
 										if (item[i][br] == ' ') throw "CAN'T SEPERATE $ AND OPERAND! " + item[i];
 
@@ -1107,24 +1010,17 @@ int main(int argc, char* argv[]) {
 											}
 										}
 										else {
+											
+											lucky += "0000000000";
+											Symbol_Table* pom = isInSymbol_Table(s2);
+											if (pom == nullptr)
+												add(s2, -5, 'l', false, 0, 0);
+											int a = LC + 2;
 											if (pazi == 1) {
-												lucky += "0000000000";
-												Symbol_Table* pom = isInSymbol_Table(s2);
-												if (pom == nullptr) {
-													add(s2, -5, 'l', false, 0, 0);
-												}
-												int a = LC + 2;
 												lucky += "00000000";
 												addF(a, s2, BROJ_SEKCIJE, SEKCIJA, 'b');
 											}
 											else {
-												lucky += "0000000000";
-												lucky[5] = '1';
-												Symbol_Table* pom = isInSymbol_Table(s2);
-												if (pom == nullptr) {
-													add(s2, -5, 'l', false, 0, 0);
-												}
-												int a = LC + 2;
 												lucky += "0000000000000000";
 												addF(a, s2, BROJ_SEKCIJE, SEKCIJA, 'w');
 											}
@@ -1168,10 +1064,6 @@ int main(int argc, char* argv[]) {
 											else {
 												throw "Register size ERROR!" + item[i];
 											}
-
-											LC += (lucky.size() / 8);;
-											codeC += binary_hexa(lucky);
-
 										}
 										// immed - regind
 										else if (item[i][br] == '(') {
@@ -1200,9 +1092,6 @@ int main(int argc, char* argv[]) {
 												if (s3.size() == 2 || s3 == "PSW" || s3 == "psw")
 													lucky += getReg(s3);
 												else throw "ERROR WITH REGISTER! " + item[i];
-
-												LC += (lucky.size() / 8);
-												codeC += binary_hexa(lucky);
 											}
 											else throw "regind but no % ERROR!" + item[i];
 										}
@@ -1215,29 +1104,17 @@ int main(int argc, char* argv[]) {
 
 												if (pazi == 0 && regex_match(s2, numberr)) {
 													if (stoi(s2,nullptr,0) < 128 && stoi(s2,nullptr,0) > -129) { lucky += decToBinary(stoi(s2,nullptr,0), 1); lucky[5] = '0'; }
-													/*else {
-														lucky += decToBinary(stoi(s2,nullptr,0), 2); lucky[5] = '1'; // ne treba ovo
-													}*/
 												}
 
 												while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
 
-												if (regex_match(s4, numberr) == false) {
-													Symbol_Table* pom = isInSymbol_Table(s4);
-													if (pom == nullptr) {
-														add(s4, -5, 'l', false, 0, 0);
-													}
-
-													int av = lucky.size() / 8 + 1;
-													addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
-												}
+												if (regex_match(s4, numberr) == false) 
+													process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, (lucky.size() / 8 + 1));
 
 												lucky += "10000000";
 												if (regex_match(s4, numberr)) {
 													lucky[5] = '1';
-													if (stoi(s4,nullptr,0) > 0)
-														lucky += decToBinary(stoi(s4,nullptr,0), 2);
-													else throw "CAN'T BE NEGATIVE! " + item[i];
+													lucky += decToBinary(stoi(s4,nullptr,0), 2);
 												}
 												else {
 													lucky += "0000000000000000";
@@ -1248,21 +1125,12 @@ int main(int argc, char* argv[]) {
 
 												if (pazi == 0 && regex_match(s2, numberr)) {
 													if (stoi(s2,nullptr,0) < 128 && stoi(s2,nullptr,0) > -129) { lucky += decToBinary(stoi(s2,nullptr,0), 1); lucky[5] = '0'; }
-													/*else {
-														lucky += decToBinary(stoi(s2,nullptr,0), 2); lucky[5] = '1'; // ovaj deo ne treba
-													}*/
 												}
 
 												br++;
 
-												if (regex_match(s4, numberr) == false) {
-													Symbol_Table* pom = isInSymbol_Table(s4);
-													if (pom == nullptr) {
-														add(s4, -5, 'l', false, 0, 0);
-													}
-													int av = lucky.size() / 8 + 1;
-													addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
-												}
+												if (regex_match(s4, numberr) == false)
+													process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, (lucky.size() / 8 + 1));
 
 												lucky += "011";
 												if (item[i][br] == '%') {
@@ -1293,10 +1161,9 @@ int main(int argc, char* argv[]) {
 											else {
 												throw "NOTHING! " + item[i];
 											}
-
-											LC += (lucky.size() / 8);
-											codeC += binary_hexa(lucky);
 										}
+										LC += (lucky.size() / 8);
+										codeC += binary_hexa(lucky);
 									}
 									// REGDIR
 									else if (item[i][br] == '%') {
@@ -1347,10 +1214,6 @@ int main(int argc, char* argv[]) {
 												lucky[5] = '1';
 
 												if (s2.size() == 3)  throw "ERROR!" + item[i];
-												// OVO NE TREBA, JER NE MOZE PRVI BITI MANJI OD DRUGOG - PA NE ZNAS size BIT
-												/*if (pazi == 1 && s1 == "MOV") throw "ERROR!" + item[i];
-												if (s2.size() == 3 && s1 == "MOV") throw "ERROR!" + item[i];
-												if (pazi == 1 && s2.size() == 3 && s1 == "MOV") throw "ERROR!" + item[i];*/
 
 												lucky += "001";
 												lucky += getReg(s3);
@@ -1366,11 +1229,6 @@ int main(int argc, char* argv[]) {
 
 												lucky += getRegKRACI(s3);
 											}
-
-											LC += lucky.size() / 8;
-											codeC += binary_hexa(lucky);
-
-
 										}
 										// regdir - regind
 										else if (item[i][br] == '(') {
@@ -1390,15 +1248,10 @@ int main(int argc, char* argv[]) {
 
 												lucky += "010";
 
-												if (s3.size() == 2 || s3 == "PSW" || s3 == "psw") {
-													lucky += getReg(s3);
-												}
+												if (s3.size() == 2 || s3 == "PSW" || s3 == "psw") lucky += getReg(s3);
 												else throw "ERROR!" + item[i];
 											}
 											else throw "ERROR!" + item[i];
-
-											LC += lucky.size() / 8;
-											codeC += binary_hexa(lucky);
 										}
 										// regdir - regindpom/memdir
 										else {
@@ -1408,42 +1261,22 @@ int main(int argc, char* argv[]) {
 											if (item[i][br] == ' ' || item[i][br] == '\n') {
 												while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
 
-												if (regex_match(s4, numberr) == false) {
-													Symbol_Table* pom = isInSymbol_Table(s4);
-													if (pom == nullptr) {
-														add(s4, -5, 'l', false, 0, 0);
-													}
-
-													int av = LC + 3;
-													addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
-												}
+												if (regex_match(s4, numberr) == false)
+													process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 3);
 
 												lucky += "10000000";
 												if (pazi == 0 && s2.size() == 2) lucky[5] = '1';
 
-												if (regex_match(s4, numberr)) {
-													if (stoi(s4,nullptr,0) > 0)
-														lucky += decToBinary(stoi(s4,nullptr,0), 2);
-													else throw "CAN'T BE NEGATIVE! " + item[i];
-												}
-												else {
-													lucky += "0000000000000000";
-												}
+												if (regex_match(s4, numberr)) lucky += decToBinary(stoi(s4,nullptr,0), 2);
+												else lucky += "0000000000000000";
 
 											}
 											// regindpom
 											else if (item[i][br] == '(') {
-
 												br++;
 
-												if (regex_match(s4, numberr) == false) {
-													Symbol_Table* pom = isInSymbol_Table(s4);
-													if (pom == nullptr) {
-														add(s4, -5, 'l', false, 0, 0);
-													}
-													int av = LC + 3;
-													addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
-												}
+												if (regex_match(s4, numberr) == false)
+													process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 3);
 
 												lucky += "011";
 
@@ -1463,14 +1296,13 @@ int main(int argc, char* argv[]) {
 												if (pazi == 0 && s2.size() == 2) lucky[5] = '1';
 
 												if (regex_match(s4, numberr)) {
-													lucky += decToBinary(atoi(s4.c_str()), 2);
+													lucky += decToBinary(stoi(s4), 2);
 												}
 												else {
 													if (s3 == "PC" || s3 == "pc" || s3 == "r7" || s3 == "R7") {
 														poslF->setLinker(-2);
 														poslF->setIma_Pomeraj();
 													}
-													//lucky += decToBinary(-2, 2);
 													lucky += "0000000000000000";
 												}
 
@@ -1478,10 +1310,9 @@ int main(int argc, char* argv[]) {
 											else {
 												throw "UNKNOWN! " + item[i];
 											}
-
-											LC += lucky.size() / 8;
-											codeC += binary_hexa(lucky);
 										}
+										LC += lucky.size() / 8;
+										codeC += binary_hexa(lucky);
 									}
 									// REGIND
 									else if (item[i][br] == '(') {
@@ -1506,8 +1337,7 @@ int main(int argc, char* argv[]) {
 
 										lucky += "010";
 
-										if (s2.size() == 2 || s2 == "PSW" || s2 == "psw")
-											lucky += getReg(s2);
+										if (s2.size() == 2 || s2 == "PSW" || s2 == "psw") lucky += getReg(s2);
 										else throw "ERROR!" + item[i];
 
 										if (item[i][br] == '$') throw "CAN'T USE IMMED HERE! " + item[i];
@@ -1531,10 +1361,6 @@ int main(int argc, char* argv[]) {
 												if (pazi == 2) throw "ERROR!" + item[i];
 												lucky += getRegKRACI(s3);
 											}
-
-											LC += lucky.size() / 8;
-											codeC += binary_hexa(lucky);
-
 										}
 										// regind - regind
 										else if (item[i][br] == '(') {
@@ -1554,14 +1380,8 @@ int main(int argc, char* argv[]) {
 
 											lucky += "010";
 
-											if (s3.size() == 2 || s3 == "PSW" || s3 == "psw") {
-												lucky += getReg(s3);
-											}
+											if (s3.size() == 2 || s3 == "PSW" || s3 == "psw") lucky += getReg(s3);
 											else throw "ERROR!" + item[i];
-
-											LC += lucky.size() / 8;
-											codeC += binary_hexa(lucky);
-
 										}
 										// regind - regindpom / memdir
 										else {
@@ -1571,39 +1391,21 @@ int main(int argc, char* argv[]) {
 											if (item[i][br] == ' ' || item[i][br] == '\n') {
 												while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
 
-												if (regex_match(s4, numberr) == false) {
-													Symbol_Table* pom = isInSymbol_Table(s4);
-													if (pom == nullptr) {
-														add(s4, -5, 'l', false, 0, 0);
-													}
-
-													int av = LC + 3;
-													addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
-												}
+												if (regex_match(s4, numberr) == false)
+													process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 3);
 
 												lucky += "10000000";
 
-												if (regex_match(s4, numberr)) {
-													if (stoi(s4,nullptr,0) > 0)
-														lucky += decToBinary(stoi(s4,nullptr,0), 2);
-													else throw "CAN'T BE NEGATIVE! " + item[i];
-												}
-												else {
-													lucky += "0000000000000000";
-												}
+												if (regex_match(s4, numberr)) lucky += decToBinary(stoi(s4,nullptr,0), 2);
+												else lucky += "0000000000000000";
+												
 											}
 											// regindpom
 											else if (item[i][br] == '(') {
 												br++;
 
-												if (regex_match(s4, numberr) == false) {
-													Symbol_Table* pom = isInSymbol_Table(s4);
-													if (pom == nullptr) {
-														add(s4, -5, 'l', false, 0, 0);
-													}
-													int av = LC + 3;
-													addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
-												}
+												if (regex_match(s4, numberr) == false) 
+													process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 3);
 
 												lucky += "011";
 
@@ -1614,31 +1416,28 @@ int main(int argc, char* argv[]) {
 													while (item[i][br] == ' ') br++;
 													if (item[i][br] != '\n') throw "SOME GARBAGE AFTER! " + item[i];
 
-													if (s3.size() == 2 || s3 == "PSW" || s3 == "psw")
-														lucky += getReg(s3);
+													if (s3.size() == 2 || s3 == "PSW" || s3 == "psw") lucky += getReg(s3);
 													else throw "NOT GOOD s2 HERE!" + item[i];
 												}
 												else throw "MUST BE WITHOUT SPACE! " + item[i];
 
 												if (regex_match(s4, numberr)) {
-													lucky += decToBinary(atoi(s4.c_str()), 2);
+													lucky += decToBinary(stoi(s4), 2);
 												}
 												else {
 													if (s3 == "PC" || s3 == "pc" || s3 == "r7" || s3 == "R7") {
-														lucky += "0000000000000000";
 														poslF->setLinker(-2);
 														poslF->setIma_Pomeraj();
 													}
-													//lucky += decToBinary(-2, 2);
-													else lucky += "0000000000000000";
+													lucky += "0000000000000000";
 												}
 											}
 											else {
 												throw "UNKNOWN! " + item[i];
 											}
-											LC += lucky.size() / 8;
-											codeC += binary_hexa(lucky);
 										}
+										LC += lucky.size() / 8;
+										codeC += binary_hexa(lucky);
 									}
 									// REGINDPOM/MEMDIR
 									else {
@@ -1648,14 +1447,9 @@ int main(int argc, char* argv[]) {
 										if (item[i][br] == '(') {
 											br++;
 
-											if (regex_match(s4, numberr) == false) {
-												Symbol_Table* pom = isInSymbol_Table(s4);
-												if (pom == nullptr) {
-													add(s4, -5, 'l', false, 0, 0);
-												}
-												int av = LC + 2;
-												addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
-											}
+											if (regex_match(s4, numberr) == false)
+												process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 2);
+
 											For_Table* pomocni = poslF;
 
 											lucky += "000011";
@@ -1671,8 +1465,7 @@ int main(int argc, char* argv[]) {
 													br++;  while (item[i][br] == ' ') br++;
 												}
 
-												if (s2.size() == 2 || s2 == "PSW" || s2 == "psw")
-													lucky += getReg(s2);
+												if (s2.size() == 2 || s2 == "PSW" || s2 == "psw") lucky += getReg(s2);
 												else throw "NOT GOOD s2 HERE!" + item[i];
 											}
 											else throw "MUST BE WITHOUT SPACE! " + item[i];
@@ -1698,12 +1491,10 @@ int main(int argc, char* argv[]) {
 													while (item[i][br] == ' ') br++; if (item[i][br] != '\n') throw "ERROR, NO COMA!";
 												}
 
-												if (SPECIJALNI_FLAG == 1) {
-
+												if (SPECIJALNI_FLAG == 1) { // bio PC gore
 													pomocni->setLinker(-3);
 													pomocni->setIma_Pomeraj();
 													lucky += "0000000000000000";
-													//lucky += decToBinary(-3, 2);
 												}
 
 												lucky += "001";
@@ -1716,9 +1507,6 @@ int main(int argc, char* argv[]) {
 													if (pazi == 2) throw "ERROR!" + item[i];
 													lucky += getRegKRACI(s3);
 												}
-
-												LC += lucky.size() / 8;
-												codeC += binary_hexa(lucky);
 											}
 											// regindpom - regind
 											else if (item[i][br] == '(') {
@@ -1737,22 +1525,16 @@ int main(int argc, char* argv[]) {
 												}
 												else throw "CAN'T USE SPACE! " + item[i];
 
-												if (SPECIJALNI_FLAG == 1) {
+												if (SPECIJALNI_FLAG == 1) { //bio PC gore
 													pomocni->setLinker(-3);
 													pomocni->setIma_Pomeraj();
 													lucky += "0000000000000000";
-													//lucky += decToBinary(-3, 2);
 												}
 
 												lucky += "010";
 
-												if (s3.size() == 2 || s3 == "PSW" || s3 == "psw") {
-													lucky += getReg(s3);
-												}
+												if (s3.size() == 2 || s3 == "PSW" || s3 == "psw") lucky += getReg(s3);
 												else throw "ERROR!" + item[i];
-
-												LC += lucky.size() / 8;
-												codeC += binary_hexa(lucky);
 											}
 											else {
 												while (item[i][br] != '(' && item[i][br] != '\n' && item[i][br] != ' ') s5 += item[i][br++];
@@ -1767,9 +1549,7 @@ int main(int argc, char* argv[]) {
 														if (pom == nullptr) {
 															add(s5, -5, 'l', false, 0, 0);
 														}
-
 														if (SPECIJALNI_FLAG == 0) {
-															//int av = LC + (lucky.size() / 8) + 1;
 															int av = LC + 5;
 															addF(av, s5, BROJ_SEKCIJE, SEKCIJA, 'w');
 														}
@@ -1781,7 +1561,7 @@ int main(int argc, char* argv[]) {
 														}
 													}
 
-													if (SPECIJALNI_FLAG == 1) {
+													if (SPECIJALNI_FLAG == 1) { //bio PC gore
 														pomocni->setLinker(-5);
 														pomocni->setIma_Pomeraj();
 														lucky += "0000000000000000";
@@ -1789,32 +1569,15 @@ int main(int argc, char* argv[]) {
 
 													lucky += "10000000";
 
-													if (regex_match(s5, numberr)) {
-														if (stoi(s5,nullptr,0) > 0)
-															lucky += decToBinary(stoi(s5,nullptr,0), 2);
-														else throw "CAN'T BE NEGATIVE! " + item[i];
-													}
-													else {
-														lucky += "0000000000000000";
-													}
-
-													LC += lucky.size() / 8;
-													codeC += binary_hexa(lucky);
+													if (regex_match(s5, numberr)) lucky += decToBinary(stoi(s5,nullptr,0), 2);
+													else lucky += "0000000000000000";
 												}
 												// regindpom - regindpom
 												else if (item[i][br] == '(') {
 													br++;
 
-													if (regex_match(s5, numberr) == false) {
-
-														Symbol_Table* pom = isInSymbol_Table(s5);
-														if (pom == nullptr) {
-															add(s5, -5, 'l', false, 0, 0);
-														}
-
-														int av = LC + 5;
-														addF(av, s5, BROJ_SEKCIJE, SEKCIJA, 'w');
-													}
+													if (regex_match(s5, numberr) == false)
+														process_move(s5, LC, BROJ_SEKCIJE, SEKCIJA, 5);
 
 													if (item[i][br] == '%') {
 														br++;
@@ -1833,28 +1596,23 @@ int main(int argc, char* argv[]) {
 
 													lucky += "011";
 
-													if (s3.size() == 2 || s3 == "PSW" || s3 == "psw")
-														lucky += getReg(s3);
+													if (s3.size() == 2 || s3 == "PSW" || s3 == "psw") lucky += getReg(s3);
 													else throw "REG SIZE ERROR! " + item[i];
 
-													if (regex_match(s5, numberr)) {
+													if (regex_match(s5, numberr))
 														lucky += decToBinary(stoi(s5,nullptr,0), 2);
-													}
 													else {
 														if (s3 == "PC" || s3 == "pc" || s3 == "R7" || s3 == "r7") {
 															poslF->setLinker(-2);
 															poslF->setIma_Pomeraj();
-															lucky += "0000000000000000";
 														}
-														//lucky += decToBinary(-2, 2);
-														else lucky += "0000000000000000";
+														lucky += "0000000000000000";
 													}
-
-													LC += lucky.size() / 8;
-													codeC += binary_hexa(lucky);
 												}
 												else throw "UNKNOWN! " + item[i];
 											}
+											LC += lucky.size() / 8;
+											codeC += binary_hexa(lucky);
 										}
 										//MEMDIR
 										else if (item[i][br] == ' ' || item[i][br] == ',') {
@@ -1868,19 +1626,11 @@ int main(int argc, char* argv[]) {
 
 											lucky += "10000000";
 
-											if (regex_match(s4, numberr)) {
-												if (stoi(s4,nullptr,0) > 0)
-													lucky += decToBinary(stoi(s4,nullptr,0), 2);
-												else throw "CAN'T BE NEGATIVE! " + item[i];
-											}
+											if (regex_match(s4, numberr))
+												lucky += decToBinary(stoi(s4, nullptr, 0), 2);
 											else {
-												Symbol_Table* pom = isInSymbol_Table(s4);
-												if (pom == nullptr)
-													add(s4, -5, 'l', false, 0, 0);
-
+												process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 2);
 												lucky += "0000000000000000";
-												int av = LC + 2;
-												addF(av, s4, BROJ_SEKCIJE, SEKCIJA, 'w');
 											}
 
 											if (item[i][br] == '$') throw "CAN'T USE IMMED HERE! " + item[i];
@@ -1905,9 +1655,6 @@ int main(int argc, char* argv[]) {
 													lucky += getRegKRACI(s3);
 												}
 												else throw "REG SIZE ERROR!" + item[i];
-
-												LC += lucky.size() / 8;
-												codeC += binary_hexa(lucky);
 											}
 											//memdir - regind
 											else if (item[i][br] == '(') {
@@ -1928,13 +1675,8 @@ int main(int argc, char* argv[]) {
 
 												lucky += "010";
 
-												if (s3.size() == 2 || s3 == "PSW" || s3 == "psw") {
-													lucky += getReg(s3);
-												}
+												if (s3.size() == 2 || s3 == "PSW" || s3 == "psw") lucky += getReg(s3);
 												else throw "ERROR!" + item[i];
-
-												LC += lucky.size() / 8;
-												codeC += binary_hexa(lucky);
 											}
 											// memdir - regindpom/memdir
 											else {
@@ -1944,46 +1686,20 @@ int main(int argc, char* argv[]) {
 												if (item[i][br] == ' ' || item[i][br] == '\n') {
 													while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
 
-													if (regex_match(s5, numberr) == false) {
-
-														Symbol_Table* pom = isInSymbol_Table(s5);
-														if (pom == nullptr) {
-															add(s5, -5, 'l', false, 0, 0);
-														}
-
-														int av = LC + 5;
-														addF(av, s5, BROJ_SEKCIJE, SEKCIJA, 'w');
-													}
+													if (regex_match(s5, numberr) == false)
+														process_move(s5, LC, BROJ_SEKCIJE, SEKCIJA, 5);
 
 													lucky += "10000000";
 
-													if (regex_match(s5, numberr)) {
-														if (stoi(s5,nullptr,0) > 0)
-															lucky += decToBinary(stoi(s5,nullptr,0), 2);
-														else throw "CAN'T BE NEGATIVE! " + item[i];
-													}
-													else {
-														lucky += "0000000000000000";
-													}
-
-													LC += lucky.size() / 8;
-													codeC += binary_hexa(lucky);
-
+													if (regex_match(s5, numberr)) lucky += decToBinary(stoi(s5,nullptr,0), 2);
+													else lucky += "0000000000000000";
 												}
 												// regindpom
 												else if (item[i][br] == '(') {
 													br++;
 
-													if (regex_match(s5, numberr) == false) {
-
-														Symbol_Table* pom = isInSymbol_Table(s5);
-														if (pom == nullptr) {
-															add(s5, -5, 'l', false, 0, 0);
-														}
-
-														int av = LC + (lucky.size() / 8) + 1;
-														addF(av, s5, BROJ_SEKCIJE, SEKCIJA, 'w');
-													}
+													if (regex_match(s5, numberr) == false) 
+														process_move(s5, LC, BROJ_SEKCIJE, SEKCIJA, ((lucky.size() / 8) + 1));
 
 													if (item[i][br] == '%') {
 														br++;
@@ -2000,25 +1716,20 @@ int main(int argc, char* argv[]) {
 														lucky += getReg(s3);
 													else throw "REG SIZE ERROR! " + item[i];
 
-													if (regex_match(s5, numberr)) {
+													if (regex_match(s5, numberr)) 
 														lucky += decToBinary(stoi(s5,nullptr,0), 2);
-													}
 													else {
 														if (s3 == "PC" || s3 == "pc" || s3 == "R7" || s3 == "r7") {
 															poslF->setLinker(-2);
 															poslF->setIma_Pomeraj();
-															lucky += "0000000000000000";
 														}
-														//lucky += decToBinary(-2, 2);
-														else lucky += "0000000000000000";
+														lucky += "0000000000000000";
 													}
-
-													LC += lucky.size() / 8;
-													codeC += binary_hexa(lucky);
 												}
 												else throw "UNKNOWN! " + item[i];
 											}
-
+											LC += lucky.size() / 8;
+											codeC += binary_hexa(lucky);
 										}
 									}
 								}
@@ -2061,19 +1772,10 @@ int main(int argc, char* argv[]) {
 											else throw "CAN'T USE NEGATIVE NUMBERS! " + item[i];
 										}
 										else {
-											Symbol_Table* pom = isInSymbol_Table(s2);
-											if (pom == nullptr) {
-												add(s2, -5, 'l', false, 0, 0);
-											}
-											int av = LC + 2;
-											addF(av, s2, BROJ_SEKCIJE, SEKCIJA, 'w');
+											process_move(s2, LC, BROJ_SEKCIJE, SEKCIJA, 2);
 											poslF->setSkok();
 											lucky += "0000000000000000";
 										}
-
-										LC += lucky.size() / 8;
-										codeC += binary_hexa(lucky);
-
 									}
 									// NOT IMMED
 									else if (item[i][br] == '*') {
@@ -2099,9 +1801,6 @@ int main(int argc, char* argv[]) {
 												lucky += getRegKRACI(s2);
 											}
 											else throw "ILLEGAL REGISTER! " + item[i];
-
-											LC += lucky.size() / 8;
-											codeC += binary_hexa(lucky);
 										}
 										// REGIND
 										else if (item[i][br] == '(') {
@@ -2121,12 +1820,8 @@ int main(int argc, char* argv[]) {
 
 												if (pazi != 2) lucky[5] = '0'; // za INT
 
-												if (s2.size() == 2 || s2 == "PSW" || s2 == "psw")
-													lucky += getReg(s2);
+												if (s2.size() == 2 || s2 == "PSW" || s2 == "psw") lucky += getReg(s2);
 												else throw "ILLEGAL REGISTER! " + item[i];
-
-												LC += lucky.size() / 8;
-												codeC += binary_hexa(lucky);
 											}
 											else throw "ERROR with '(' " + item[i];
 										}
@@ -2141,32 +1836,22 @@ int main(int argc, char* argv[]) {
 												lucky += "10000000";
 
 												if (regex_match(s3, numberr) == false) {
-													Symbol_Table* pom = isInSymbol_Table(s3);
-													if (pom == nullptr) {
-														add(s3, -5, 'l', false, 0, 0);
-													}
-													int av = LC + 2;
-													addF(av, s3, BROJ_SEKCIJE, SEKCIJA, 'w');
+													process_move(s3, LC, BROJ_SEKCIJE, SEKCIJA, 3);
 													poslF->setSkok();
 													lucky += decToBinary(0, 2);
 												}
 												else {
-													if (stoi(s3,nullptr,0) > 0) {
-														if (s1 == "INT" && pazi==1 && stoi(s3,nullptr,0) < 128 && stoi(s3,nullptr,0) >0) {
-															lucky[5] = '0';
-															lucky += decToBinary(stoi(s3,nullptr,0), 1);
-														}
-														else if (s1 == "INT" && pazi == 1 && stoi(s3,nullptr,0) >= 128) {
-															throw "CAN'T USE SUFIX B AND THIS VALUE! " + item[i];
-														}
-														else if (stoi(s3,nullptr,0) > 32767) throw "OPERAND TOO BIG! " + item[i];
-														else lucky += decToBinary(stoi(s3,nullptr,0), 2);
+													if (s1 == "INT" && pazi==1 && stoi(s3,nullptr,0) < 128 && stoi(s3,nullptr,0) >0) {
+														lucky[5] = '0';
+														lucky += decToBinary(stoi(s3,nullptr,0), 1);
 													}
-													else throw "CAN'T USE NEGATIVE NUMBER - memdir! " + item[i];
-												}
+													else if (s1 == "INT" && pazi == 1 && stoi(s3,nullptr,0) >= 128) {
+														throw "CAN'T USE SUFIX B AND THIS VALUE! " + item[i];
+													}
+													else if (stoi(s3,nullptr,0) > 32767) throw "OPERAND TOO BIG! " + item[i];
+													else lucky += decToBinary(stoi(s3,nullptr,0), 2);
 
-												LC += lucky.size() / 8;
-												codeC += binary_hexa(lucky);
+												}
 											}
 											// REGINDPOM
 											else if (item[i][br] == '(') {
@@ -2186,33 +1871,23 @@ int main(int argc, char* argv[]) {
 												else throw "MUST BE WITHOUT SPACE! " + item[i];
 
 												if (regex_match(s3, numberr) == false) {
-													Symbol_Table* pom = isInSymbol_Table(s3);
-													if (pom == nullptr) {
-														add(s3, -5, 'l', false, 0, 0);
-													}
-													int av = LC + 2;
-													addF(av, s3, BROJ_SEKCIJE, SEKCIJA, 'w');
+													process_move(s3, LC, BROJ_SEKCIJE, SEKCIJA, 2);
 													poslF->setSkok();
 													lucky += decToBinary(0, 2);
 
 													if (s2 == "PC" || s2 == "pc" || s2 == "r7" || s2 == "R7") {
 														poslF->setLinker(-2);
 													}
-
 												}
-												else {
-													lucky += decToBinary(stoi(s3,nullptr,0), 2);
-												}
-
-												LC += lucky.size() / 8;
-												codeC += binary_hexa(lucky);
+												else lucky += decToBinary(stoi(s3,nullptr,0), 2);
 											}
 											else {
 												throw "Unknown ( attempt BRANCH-REGINDPOM )? " + item[i];
 											}
-
 										}
 									}
+									LC += lucky.size() / 8;
+									codeC += binary_hexa(lucky);
 								}
 								// ERROR
 								else {
@@ -2225,23 +1900,16 @@ int main(int argc, char* argv[]) {
 					}
 				}
 			}
-			//}
 		}
 
 		if (bilo_end == false) throw "NO .end!";
-
-		// ISPIS EQU
-		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next)
-			cout << tek->getSymbol() << " | " << tek->getNiz() << " | " << tek->getZnaci() << " | " << tek->getIK() << endl;
-
-		cout << endl;
 
 		// PROVERA KRUZNE ZAVISNOSTI I ZAMENA VREDNOSTI ZA EQU!
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			string symbol = tek->getSymbol();
 			vector<string> sMain1 = tek->getNizBukvalno();
 			vector<string> sMain2 = tek->getZnaciBukvalno();
-			if (circle() == true) throw "CIRCLE ERROR!";
+			if (circle(numberr) == true) throw "CIRCLE ERROR!";
 			else {
 				for (Equ_Table* tek2 = prviE; tek2 != nullptr; tek2 = tek2->next) {
 					if (tek2 != tek) {
@@ -2317,31 +1985,28 @@ int main(int argc, char* argv[]) {
 
 		/* UBACIVANJE VREDNOSTI I RACUNANJE VREDNOSTI SIMBOLA I PRAVLJENJE ZAPISA
 		   indeks_klasifikacije == 0 => simbol je extern => relokacioni ide ka njemu => u kod 0
-		   indeks_klasifikacije == 1 => simbol je global/local => relokacioni ka sekciji => u kod njegova vrednost */
+		   indeks_klasifikacije == 1 => simbol je global => relokacioni ka sekciji => u kod njegova vrednost 
+									 => simbol je local => relokacioni nema uopste */
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			vector<string> s1 = tek->getNizBukvalno();
 			vector<string> s2 = tek->getZnaciBukvalno();
-			int ulaz_za_simbol = isInSymbol_Table(tek->getSymbol())->getRbr();
+			Symbol_Table* blabla = isInSymbol_Table(tek->getSymbol());
+			int ulaz_za_simbol = blabla->getRbr();
 
 			int vrednost = 0;
 			for (int i = 0; i < s1.size(); i++) {
 				Symbol_Table* pom = isInSymbol_Table(s1[i]);
 
 				if (regex_match(s1[i], numberr) == false) {
-					if (isInSymbol_Table(tek->getSymbol())->getlg() == 'l' && tek->getIK()==0) {
+					
+					int v = pom->getValue();
+					int sekcija = pom->getSection();
 
-					}
+					if (s2[i] == "-") vrednost -= v;
+					else vrednost += v;
+
+					if (blabla->getlg() == 'l' && tek->getIK() == 0) {} // preskoci obradu 
 					else {
-						int v = pom->getValue();
-						int sekcija = pom->getSection();
-
-						if (s2[i] == "-") {
-							vrednost -= v;
-						}
-						else {
-							vrednost += v;
-						}
-
 						if (sekcija == 0) {
 							addR(pom->getRbr(), ulaz_za_simbol, "EQU_REL_EXTERN");
 							poslR->setSign(s2[i][0]);
@@ -2349,28 +2014,22 @@ int main(int argc, char* argv[]) {
 					}
 				}
 				else {
-					int v = atoi(s1[i].c_str()); // int v = stoi(s1[i]); vrednost += v; ali ne smem da rizikujem
-
-					if (s2[i] == "-") {
-						vrednost -= v;
-					}
-					else {
-						vrednost += v;
-					}
+					int v = stoi(s1[i]);
+					if (s2[i] == "-") vrednost -= v;
+					else vrednost += v;
 				}
 			}
 
 			if (tek->getIK() != 0 && tek->getIK() != -1) { //ako nije apsolutan i ako nije extern
-				addR(tek->getIK(), ulaz_za_simbol, "EQU_REL");
+				if(blabla->getlg()!='l')
+					addR(tek->getIK(), ulaz_za_simbol, "EQU_REL");
 			}
-			if (tek->getIK() == -1) { isInSymbol_Table(tek->getSymbol())->setSection(-5); } 
-			//apsolutan signal koji nema sekciju! ide u 0/-5 sekciju JER JE LEPSE i linker posle nece traziti po drugim fajlovima njega i pokusavati da ga upari, jer ce mu 
-			//isEqu biti na vrednosti 1
+			if (tek->getIK() == -1) { blabla->setSection(-5); } //ako je apsolutan, sekcija izmisljena kao znak -5
 			else {
-				isInSymbol_Table(tek->getSymbol())->setSection(tek->getIK());
+				blabla->setSection(tek->getIK()); // u suprotnom sekcija zavisi od izraza
 			}
 
-			isInSymbol_Table(tek->getSymbol())->setValue(vrednost);
+			blabla->setValue(vrednost);
 		}
 
 		for (int i = 0; i < globalni.size(); i++) {
@@ -2379,12 +2038,11 @@ int main(int argc, char* argv[]) {
 				throw "ERROR! CAN'T BE LIKE THIS!";
 		}
 
-
 		// RAZRESAVANJE TABELE OBRACANJA UNAPRED!
 		for (For_Table* tek = prviF; tek != nullptr; tek = tek->next) {
 			Symbol_Table* pom = isInSymbol_Table(tek->getSymbol());
 			if (pom == nullptr) {
-				cout << "ERROR! NOT IN TABLE!" << endl;
+				throw "ERROR! NOT IN TABLE! " + item[i];
 			}
 			else if (pom->getlg() == 'l' && pom->getEqu() && pom->getSection() == 0) {
 				for (Equ_Table* naca = prviE; naca != nullptr; naca = naca->next) {
@@ -2416,28 +2074,7 @@ int main(int argc, char* argv[]) {
 								}
 							}
 						}
-
-						char vel = tek->getSize();
-						if (vel == 'b') {
-							if (pom->getValue() > 127 || pom->getValue() < -129) throw "Byte forward table element with size of Word. ";
-							string s = decToBinary(pom->getValue(), 1);
-							s = binary_hexa(s);
-							c->changeCode(tek->getPatch(), s);
-						}
-						else {
-							string s = decToBinary(pom->getValue(), 2);
-							s = binary_hexa(s);
-							string s1 = "";
-							string s2 = "";
-
-							for (int i = 0; i < s.size(); i++)
-								if (i <= 1) s1 += s[i];
-								else s2 += s[i];
-
-							c->changeCode(tek->getPatch(), s1);
-							c->changeCode(tek->getPatch() + 1, s2);
-						}
-
+						rewriteCode(pom, tek, c);
 						break;
 					}
 				}
@@ -2451,35 +2088,8 @@ int main(int argc, char* argv[]) {
 				int a = tek->getSectionNumber();
 				Symbol_Table* c = getCodeNumberMain(a);
 
-				char vel = tek->getSize();
-				if (vel == 'b') {
-					if (pom->getValue() > 127 || pom->getValue() < -129) throw "Byte forward table element with size of Word. ";
-					string s = decToBinary(pom->getValue(), 1);
-					s = binary_hexa(s);
-					c->changeCode(tek->getPatch(), s);
-				}
-				else {
-					string s = decToBinary(pom->getValue(), 2);
-					s = binary_hexa(s);
-					string s1 = "";
-					string s2 = "";
+				rewriteCode(pom, tek, c);
 
-					for (int i = 0; i < s.size(); i++)
-						if (i <= 1) s1 += s[i];
-						else s2 += s[i];
-
-					c->changeCode(tek->getPatch(), s1);
-					c->changeCode(tek->getPatch() + 1, s2);
-				}
-				// ako je simbol local, EQU i pripada UNDEF, mora relokacioni za EQU, jer linker mora da nadje eksterni simbol od kog ovaj EQU simbol zavisi, a  za koriscenje ce ici zapis ka simbolu
-				// ako je simbol local, EQU i ne pripada UNDEF sekciji, ne treba relokacioni za EQU, jer ga linker ne koristi izvan, ali treba za koriscenje ka sekciji
-				// ako je simbol local, nije EQU i pripada UNDEF, to je nemoguca situacija ( bice u -5, a ne u 0 )
-				// ako je simbol local, nije EQU i ne pripada UNDEF, to je normalna situacija gde ide relokacioni za koriscenje ka sekciji
-
-				// ako je simbol global, EQU i pripada UNDEF, mora relokacioni za EQU, jer linker mora da nadje eksterni simbol od kog ovaj EQU simbol zavisi, a za koriscenje ide ka simbolu
-				// ako je simbol global, EQU i ne pripada UNDEF sekciji, treba relokacioni za EQU, jer ga linker koristi izvan u nekom drugom fajlu, a za koriscenje ka simbolu
-				// ako je simbol global, nije EQU i pripada UNDEF, tad nije EQU i nema zapis za EQU, ali ide zapis za koriscenje ka simbolu
-				// ako je simbol global, nije EQU i ne pripada UNDEF, to je normalna situacija gde ide relokacioni za koriscenje ka simbolu
 				if (pom->getlg()=='l' && pom->getSection()!=-5) {
 					if (tek->getLinker() != 0 || tek->getIma_Pomeraj()) {
 						addR(a, tek->getPatch(), "PCrel");
@@ -2506,7 +2116,6 @@ int main(int argc, char* argv[]) {
 		}
 
 		ofstream outdata;
-
 		outdata.open(argv[2]); // opens the file
 		if (!outdata) { // file couldn't be opened
 			cerr << "Error: file could not be opened" << endl;
@@ -2515,28 +2124,28 @@ int main(int argc, char* argv[]) {
 
 		outdata << left;
 		outdata << setw(10) << "Number" << setw(10) << "Section" << setw(10) << "L/G" << setw(10) << "Defined"
-			<< setw(10) << "Value" << setw(10) << "Size" << setw(10) << "Name" << setw(10) << "Equ" << setw(10) << "Linker" << setw(10) << endl;
+			<< setw(10) << "Value" << setw(10) << "Size" << setw(10) << "Name" << setw(10) << "Equ" << setw(10) << endl;
 
+		// ISPIS SYMBOL TABLE
 		for (Symbol_Table*tek = prvi; tek != nullptr; tek = tek->next) {
 			if (tek->getlg() == 'l' && tek->getSection() == -5 && tek->getDefined() == false) throw "ERROR! LOCAL AND UNDEFINED! ";
 			outdata << left;
-			outdata << setw(10) << tek->getRbr() << setw(10) << tek->getSection() 
-					<< setw(10) << tek->getlg() << setw(10) << tek->getDefined() 
-					<< setw(10) << tek->getValue() << setw(10) << tek->getSize() 
-					<< setw(10) << tek->getName() << setw(10) << tek->getEqu() 
-					<< setw(10) << tek->getMenjaj_Me_Linekru() << setw(10) << endl;
+			outdata << setw(10) << tek->getRbr() << setw(10) << tek->getSection()<< setw(10) << tek->getlg() << setw(10) << tek->getDefined() 
+					<< setw(10) << tek->getValue() << setw(10) << tek->getSize()<< setw(10) << tek->getName() << setw(10) << tek->getEqu()<< setw(10) << endl;
 		}
 		outdata << endl;
 
 		outdata << left;
-		outdata << setw(10) << "Number" << setw(20) << "Section/Symbol" << setw(20) << "Address/For Symbol" << setw(20) << "Way" << setw(10) << "Linker" << setw(10) << "DEBIL" << setw(10) << "Sign" << endl;
+		outdata << setw(10) << "Number" << setw(20) << "Section/Symbol" << setw(20) << "Address/For Symbol" << setw(20) << "Way" << setw(10) << "Linker" << setw(15) << "For Section" << setw(10) << "Sign" << endl;
 
+		// ISPIS RELOCATION TABLE
 		for (Reloc_Table* tek = prviR; tek != nullptr; tek = tek->next) {
 				outdata << left;
-				outdata << setw(10) << tek->getRbr() << setw(20) << tek->getSym() << setw(20) << tek->getAdress() << setw(20) << tek->getWay() << setw(10) << tek->getLinker() << setw(10) << tek->getSection() << setw(10) << tek->getSign() << endl;
+				outdata << setw(10) << tek->getRbr() << setw(20) << tek->getSym() << setw(20) << tek->getAdress() << setw(20) << tek->getWay() << setw(10) << tek->getLinker() << setw(15); if (tek->getSection() == -10) outdata << "EQU"; else outdata << tek->getSection(); outdata<< setw(10) << tek->getSign() << endl;
 		}
 		outdata << endl;
 
+		// ISPIS CODE-ova
 		for (Symbol_Table*tek = prvi; tek != nullptr; tek = tek->next) {
 			if (tek->getSize() != 0) {
 				outdata << tek->getName() << ": ";
@@ -2551,12 +2160,25 @@ int main(int argc, char* argv[]) {
 		outdata.close();
 		inFile.close();
 	}
-	catch (const char* m) {
-		cout << m << endl;
-	}
-	catch (string m) {
-		cout << m << endl;
-	}
+
+	
+	/*Simbol koji je EQU, zavistan od extern simbola i globalan -> .extern b .global a .equ a, 5-b -> ide EQU_REL zapis
+		=> LINKERU, menjaj b, nemoj mene pomerati, pusti da se na osnovu te promene i ja promenim.
+
+	Simbol koji je EQU, zavistan od extern simbola i lokalan -> .extern b .equ a, 5-b -> nema EQU zapisa
+		=> a je lokalni simbol i njegova vrednost linkeru nista ne znaci => ne treba je azurirati
+
+	Simbol koji je EQU, zavistan od lokalnog simbola i lokalan -> b: .equ a, 5-b -> nema EQU zapisa
+		=> a je lokalni simbol i njegova vrednost linkeru nista ne znaci => ne treba je azurirati
+
+	Simbol koji je EQU, zavistan od lokalnog simbola i globalan -> b:.global a .equ a, 5-b -> ima EQU zapis
+		=> LINKERU, menjaj sekciju kojoj pripada b, nemoj mene pomerati, pusti da se na osnovu te promene i ja promenim.
+		
+	Simbol koji je EQU i apsolutan -> sekcija -5
+		=> LINKERU, znaj da sam ja EQU i da sam apsolutan i nemoj da me diras */
+
+	catch (const char* m) { cout << m << endl; }
+	catch (string m) { cout << m << endl; }
 	system("pause");
 	return 0;
 }
