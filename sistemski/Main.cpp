@@ -254,7 +254,9 @@ int main(int argc, char* argv[]) {
 	try {
 
 		if (argc != 4) throw "Not enough parameters!";
-		//if (argv[1] != "-o") throw "Write -o in your command line call as a second argument!";
+
+		string o = argv[1];
+		if (o != "-o") throw "Write -o in your command line call as a second argument!";
 
 		cout << argv[argc - 1] << endl;
 		ifstream inFile;
@@ -337,9 +339,11 @@ int main(int argc, char* argv[]) {
 			if (true) {
 				// SAMO LABELA
 				if (flag == 1) {
+					if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION! " + item[i];
 					LABELA = s1;
 					Symbol_Table* pomm = isInSymbol_Table(LABELA);
 					if (pomm != nullptr) {
+						for (int j = 0; j < eksterni.size(); j++) if (eksterni[j] == LABELA) { throw "CAN'T BE LABEL AND EXTERN! " + item[i]; break; }
 						if (pomm->getDefined()) { throw "label: already defined ERROR " + item[i]; }
 						else if (pomm->getDefined() == false) {
 							pomm->setName(LABELA);
@@ -356,8 +360,10 @@ int main(int argc, char* argv[]) {
 
 					if (daLiImamLabelu == true) {
 						LABELA = s1;
+						if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION! " + item[i];
 						Symbol_Table* pomm = isInSymbol_Table(LABELA);
 						if (pomm != nullptr) {
+							for (int j = 0; j < eksterni.size(); j++) if (eksterni[j] == LABELA) { throw "CAN'T BE LABEL AND EXTERN! " + item[i]; break; }
 							if (pomm->getDefined()) { throw "label: already defined ERROR " + item[i]; }
 							else if (pomm->getDefined() == false) {
 								pomm->setName(LABELA);
@@ -385,6 +391,7 @@ int main(int argc, char* argv[]) {
 						while (item[i][br] == ' ')
 							br++; // preskoci ' '
 
+						// END:
 						if (posleTacke == "end" || posleTacke =="end\n") {
 							bilo_end = true;
 							Symbol_Table* sec = isInSymbol_Table(SEKCIJA);
@@ -399,6 +406,7 @@ int main(int argc, char* argv[]) {
 							}
 							break;
 						}
+						// SECTION:
 						if (posleTacke == "section") {
 							string s1 = "";
 							while (item[i][br] != ':') {
@@ -409,9 +417,11 @@ int main(int argc, char* argv[]) {
 							br++; // preskoci ':'
 
 							while (item[i][br] == ' ') br++;
+							if (item[i][br] != '\n') throw "Error while reading .section " + item[i];
 
 							Symbol_Table* pom = isInSymbol_Table(SEKCIJA);
 							if (pom != nullptr) {
+								if (pom->getRbr() != pom->getSection()) throw "SYMBOL !!! SECTION " + item[i];
 								pom->setSize(LC);
 								for (int i = 0; i < codeC.size(); i += 2) {
 									string u = "";
@@ -423,9 +433,10 @@ int main(int argc, char* argv[]) {
 							}
 
 							SEKCIJA = s1;
+							for (int j= 0; j< eksterni.size(); j++) if (eksterni[j] == SEKCIJA) { throw "SECTION CAN'T BE EXTERN!!! " + item[i]; break; }
 							Symbol_Table* sec = isInSymbol_Table(SEKCIJA);
 							if (sec != nullptr) {
-								if (sec->getRbr() != sec->getSection()) throw "THERE IS A SYMBOL OF THIS NAME!";
+								if (sec->getRbr() != sec->getSection()) throw "THERE IS A SYMBOL OF THIS NAME! " + item[i];
 								LC = sec->getSize();
 								BROJ_SEKCIJE = sec->getRbr();
 								codeC = "";
@@ -436,10 +447,8 @@ int main(int argc, char* argv[]) {
 								codeC = "";
 								BROJ_SEKCIJE = posl->getSection();
 							}
-
-							if (item[i][br] != '\n') throw "Error while reading .section " + item[i];
-							
 						}
+						// BYTE:
 						else if (posleTacke == "byte") {
 							if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION!";
 
@@ -480,7 +489,9 @@ int main(int argc, char* argv[]) {
 										Symbol_Table* pomm = isInSymbol_Table(s1);
 										codeC += "00";
 										if (pomm != nullptr) {
-											if (pomm->getDefined() == true && pomm->getlg() == 'g') addR(pomm->getRbr(), LC, "direct");
+											if (pomm->getDefined() == true && pomm->getlg() == 'g') {
+												addR(pomm->getRbr(), LC, "direct"); poslR->setSize('b');
+											}
 											else if(pomm->getlg()=='l') addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'b');
 										}
 										else {
@@ -495,6 +506,7 @@ int main(int argc, char* argv[]) {
 							if (ima_param == false) throw ".byte ERROR " + item[i];
 							if (item[i][br - 1] == ',') throw ".byte ERROR " + item[i];
 						}
+						// WORD:
 						else if (posleTacke == "word") {
 
 							if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION!";
@@ -550,7 +562,7 @@ int main(int argc, char* argv[]) {
 							if (ima_param == false) throw ".word ERROR " + item[i];
 							if (item[i][br - 1] == ',') throw ".word ERROR " + item[i];
 						}
-						// SKIP
+						// SKIP:
 						else if (posleTacke == "skip") {
 							if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION!";
 
@@ -580,7 +592,7 @@ int main(int argc, char* argv[]) {
 							}
 							if (s1 == "") throw ".skip symbol ERROR " + item[i];
 						}
-						// GLOBAL: dodati jos LC i broj sekcije
+						// GLOBAL:
 						else if (posleTacke == "global") {
 
 						string s1 = "";
@@ -616,7 +628,7 @@ int main(int argc, char* argv[]) {
 								if (pom != nullptr) {
 									if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE GLOBAL" + item[i];
 									for (int i = 0; i < eksterni.size(); i++) { if (eksterni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i]; }
-									 pom->setlg('g');
+									pom->setlg('g');
 								}
 								else add(s1, -5, 'g', false, 0, 0);
 							}
@@ -625,7 +637,7 @@ int main(int argc, char* argv[]) {
 						if (ima_param == false) throw ".global ERROR " + item[i];
 						if (item[i][br - 1] == ',') throw ".global ERROR " + item[i];
 						}  // dodati jos LC i broj sekcije
-						// EXTERN: dodati jos LC i broj sekcije
+						// EXTERN:
 						else if (posleTacke == "extern") {
 							string s1 = "";
 
@@ -658,7 +670,7 @@ int main(int argc, char* argv[]) {
 									ima_param = true;
 									Symbol_Table* pom = isInSymbol_Table(s1);
 									if (pom != nullptr) {
-										if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE GLOBAL" + item[i];
+										if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE EXTERN" + item[i];
 										if (pom->getDefined() == true) throw "SYMBOL CAN'T BE DEFINED!" + item[i];
 										for (int i = 0; i < globalni.size(); i++) { if (globalni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i]; }
 										pom->setlg('g');  
@@ -671,6 +683,7 @@ int main(int argc, char* argv[]) {
 							if (ima_param == false) throw ".extern ERROR " + item[i];
 							if (item[i][br - 1] == ',') throw ".extern ERROR " + item[i];
 						}
+						// EQU:
 						else if (posleTacke == "equ") {
 							string s2 = "";
 							string s1 = "";
@@ -694,22 +707,34 @@ int main(int argc, char* argv[]) {
 							}
 
 							string pomocni = "";
-							for (int i = 0; i < s2.size(); i++) {
-								if (s2[i] != '+' && s2[i] != '-' && s2[i] != '\n') {
-									if (s2[i] != ' ')
-										pomocni += s2[i];
-								}
-								else {
-									znak[nizZ++] = s2[i];
-									if (pomocni == "" && i != 0) throw "ERROR! " + item[i];
-									else if (pomocni != "") {
-										niz[nizI++] = pomocni;
-										pomocni = "";
+							bool flagg = false;
+
+							for (int j = 0; j < s2.size(); j++) {
+								if (s2[j] != '+' && s2[j] != '-' && s2[j] != '\n') {
+									if (s2[j] != ' '){
+										pomocni += s2[j];
 									}
 								}
+								else {
+									if (pomocni == "" && j != 0) throw "ERROR! " + item[i];
+									else if (pomocni != "") {
+										niz[nizI++] = pomocni;
+										if (flagg == true || (flagg==false && nizZ==0)) flagg = false; else throw "EXPRESSION ERROR 2! " + item[i];
+										pomocni = "";
+									}
+
+									znak[nizZ++] = s2[j];
+									if (flagg == false) flagg = true; else throw "EXPRESSION ERROR 1! " + item[i];
+								}
+							}
+							if (pomocni != "" && pomocni != " ") {
+								niz[nizI++] = pomocni;
+								flagg = false;
 							}
 
-							niz[nizI++] = pomocni;
+							if (flagg==true) throw "ERROR EXPRESSION 3! " + item[i];
+
+							
 							int izraz = 0;
 							int flag = 0;
 
@@ -790,7 +815,7 @@ int main(int argc, char* argv[]) {
 							LC++;
 							codeC += "10";
 
-							while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] == '\n') continue;= else throw "ERROR WITH OPERANDS! " + item[i];
+							while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] == '\n') continue; else throw "ERROR WITH OPERANDS! " + item[i];
 						}
 						else {
 
@@ -2035,14 +2060,14 @@ int main(int argc, char* argv[]) {
 		for (int i = 0; i < globalni.size(); i++) {
 			Symbol_Table* pom = isInSymbol_Table(globalni[i]);
 			if (pom->getDefined() == false)
-				throw "ERROR! CAN'T BE LIKE THIS!";
+				throw "ERROR! CAN'T BE LIKE THIS! GLOBAL AND NOT DEFINED!";
 		}
 
 		// RAZRESAVANJE TABELE OBRACANJA UNAPRED!
 		for (For_Table* tek = prviF; tek != nullptr; tek = tek->next) {
 			Symbol_Table* pom = isInSymbol_Table(tek->getSymbol());
 			if (pom == nullptr) {
-				throw "ERROR! NOT IN TABLE! " + item[i];
+				throw "ERROR! NOT IN TABLE! ";
 			}
 			else if (pom->getlg() == 'l' && pom->getEqu() && pom->getSection() == 0) {
 				for (Equ_Table* naca = prviE; naca != nullptr; naca = naca->next) {
@@ -2063,11 +2088,13 @@ int main(int argc, char* argv[]) {
 										poslR->setLinker(tek->getLinker());
 										poslR->setSection(tek->getSectionNumber());
 										poslR->setSign(s2[i][0]);
+										poslR->setSize(tek->getSize());
 									}
 									else {
 										addR(pompom->getRbr(), tek->getPatch(), "direct");
 										poslR->setSection(tek->getSectionNumber());
 										poslR->setSign(s2[i][0]);
+										poslR->setSize(tek->getSize());
 									}
 
 									break;
@@ -2083,6 +2110,7 @@ int main(int argc, char* argv[]) {
 				int b = pom->getRbr();
 				addR(b, tek->getPatch(), "direct");
 				poslR->setSection(tek->getSectionNumber());
+				poslR->setSize(tek->getSize());
 			}
 			else if (pom->getlg() == 'l') {
 				int a = tek->getSectionNumber();
@@ -2095,10 +2123,12 @@ int main(int argc, char* argv[]) {
 						addR(a, tek->getPatch(), "PCrel");
 						poslR->setLinker(tek->getLinker());
 						poslR->setSection(tek->getSectionNumber());
+						poslR->setSize(tek->getSize());
 					}
 					else {
 						addR(a, tek->getPatch(), "direct");
 						poslR->setSection(tek->getSectionNumber());
+						poslR->setSize(tek->getSize());
 					}
 				}
 			}
@@ -2107,10 +2137,12 @@ int main(int argc, char* argv[]) {
 					addR(pom->getRbr(), tek->getPatch(), "PCrel");
 					poslR->setLinker(tek->getLinker());
 					poslR->setSection(tek->getSectionNumber());
+					poslR->setSize(tek->getSize());
 				}
 				else {
 					addR(pom->getRbr(), tek->getPatch(), "direct");
 					poslR->setSection(tek->getSectionNumber());
+					poslR->setSize(tek->getSize());
 				}
 			}
 		}
@@ -2136,12 +2168,12 @@ int main(int argc, char* argv[]) {
 		outdata << endl;
 
 		outdata << left;
-		outdata << setw(10) << "Number" << setw(20) << "Section/Symbol" << setw(20) << "Address/For Symbol" << setw(20) << "Way" << setw(10) << "Linker" << setw(15) << "For Section" << setw(10) << "Sign" << endl;
+		outdata << setw(10) << "Number" << setw(20) << "Section/Symbol" << setw(20) << "Address/For Symbol" << setw(20) << "Way" << setw(10) << "Linker" << setw(15) << "For Section" << setw(10) << "Sign" << setw(10) << "Size" << endl;
 
 		// ISPIS RELOCATION TABLE
 		for (Reloc_Table* tek = prviR; tek != nullptr; tek = tek->next) {
 				outdata << left;
-				outdata << setw(10) << tek->getRbr() << setw(20) << tek->getSym() << setw(20) << tek->getAdress() << setw(20) << tek->getWay() << setw(10) << tek->getLinker() << setw(15); if (tek->getSection() == -10) outdata << "EQU"; else outdata << tek->getSection(); outdata<< setw(10) << tek->getSign() << endl;
+				outdata << setw(10) << tek->getRbr() << setw(20) << tek->getSym() << setw(20) << tek->getAdress() << setw(20) << tek->getWay() << setw(10) << tek->getLinker() << setw(15); if (tek->getSection() == -10) outdata << "EQU"; else outdata << tek->getSection(); outdata<< setw(10) << tek->getSign() << setw(10) << tek->getSize()  << endl;
 		}
 		outdata << endl;
 
@@ -2160,8 +2192,6 @@ int main(int argc, char* argv[]) {
 		outdata.close();
 		inFile.close();
 	}
-
-	
 	/*Simbol koji je EQU, zavistan od extern simbola i globalan -> .extern b .global a .equ a, 5-b -> ide EQU_REL zapis
 		=> LINKERU, menjaj b, nemoj mene pomerati, pusti da se na osnovu te promene i ja promenim.
 
@@ -2176,7 +2206,6 @@ int main(int argc, char* argv[]) {
 		
 	Simbol koji je EQU i apsolutan -> sekcija -5
 		=> LINKERU, znaj da sam ja EQU i da sam apsolutan i nemoj da me diras */
-
 	catch (const char* m) { cout << m << endl; }
 	catch (string m) { cout << m << endl; }
 	system("pause");

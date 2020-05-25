@@ -1,2 +1,20 @@
+Number    Section   L/G       Defined   Value     Size      Name      Equ       
+0         0         l         1         0         0         UND       0         
+1         1         l         1         0         13        sekcija   0         
+2         0         g         0         0         0         e1        0         
+3         0         g         0         0         0         e2        0         
+4         0         g         0         0         0         e3        0         
+5         0         g         1         0         0         g1        1         
+6         1         g         1         51        0         g2        1         
+7         1         g         1         12        0         g3        0         
+8         0         l         1         16        0         k         1         
+9         1         l         1         10        0         p         0         
+10        1         l         1         13        0         m         0         
+11        -5        l         1         39        0         s         1         
+
+Number    Section/Symbol      Address/For Symbol  Way                 Linker    For Section    Sign      
+1         2                   5                   EQU_REL_EXTERN      0         EQU            +         
+2         1                   6                   EQU_REL             0         EQU            +         
+
 sekcija: 00 00 00 00 00 00 00 00 00 00 00 00 00 
 

@@ -16,6 +16,7 @@ private:
 	string way;
 	int section;
 	char sign;
+	char size;
 
 public:
 	Reloc_Table* next;
@@ -29,6 +30,7 @@ public:
 		linker = 0;
 		sign = '+';
 		section = -10;
+		size = 'w';
 	}
 
 	int getSym() { return sym_table_entry; }
@@ -38,7 +40,9 @@ public:
 	int getLinker() { return linker; }
 	char getSign() { return sign; }
 	int getSection() { return section; }
+	char getSize() { return size; }
 
+	void setSize(char s) { size = s; }
 	void setSym(int s) { sym_table_entry = s; }
 	void setRbr(int r) { rbr = r; }
 	void setWay(string w) { way = w; }
