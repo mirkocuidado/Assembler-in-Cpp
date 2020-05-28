@@ -1,8 +1,16 @@
 Number    Section   L/G       Defined   Value     Size      Name      Equ       
 0         0         l         1         0         0         UND       0         
-1         1         l         1         0         0         proba     0         
-2         -5        l         1         10        0         a         1         
+1         1         l         1         0         59        proba     0         
+2         1         g         1         0         0         labela1   0         
+3         1         g         1         50        0         labela2   0         
+4         1         l         1         0         0         a         1         
+5         1         g         1         50        0         bb        1         
 
 Number    Section/Symbol      Address/For Symbol  Way                 Linker    For Section    Sign      Size      
+1         1                   5                   direct              0         EQU            +         w         
+2         1                   50                  direct              0         1              +         b         
+3         1                   53                  PCrel               -2        1              +         w         
+4         5                   57                  PCrel               -2        1              +         w         
 
+proba: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 4C 6E 00 00 4C 6E 00 00 
 

@@ -296,6 +296,15 @@ int main(int argc, char* argv[]) {
 			int i = brr - 1;
 			item[i] = lose_extra_white_space(item[i]);
 
+			/*for (Symbol_Table*tek = prvi; tek != nullptr; tek = tek->next) {
+				//if (tek->getlg() == 'l' && tek->getSection() == -5 && tek->getDefined() == false) throw "ERROR! LOCAL AND UNDEFINED! ";
+				cout << left;
+				cout << setw(10) << tek->getRbr() << setw(10) << tek->getSection() << setw(10) << tek->getlg() << setw(10) << tek->getDefined()
+					<< setw(10) << tek->getValue() << setw(10) << tek->getSize() << setw(10) << tek->getName() << setw(10) << tek->getEqu() << setw(10) << endl;
+			}
+			cout << endl;
+			*/
+
 			int br = 0;
 			int jj = br;
 			string s1 = "";
@@ -2033,7 +2042,7 @@ int main(int argc, char* argv[]) {
 					if (blabla->getlg() == 'l' && tek->getIK() == 0) {} // preskoci obradu 
 					else {
 						if (sekcija == 0) {
-							addR(pom->getRbr(), ulaz_za_simbol, "EQU_REL_EXTERN");
+							addR(pom->getRbr(), ulaz_za_simbol, "direct");
 							poslR->setSign(s2[i][0]);
 						}
 					}
@@ -2047,7 +2056,7 @@ int main(int argc, char* argv[]) {
 
 			if (tek->getIK() != 0 && tek->getIK() != -1) { //ako nije apsolutan i ako nije extern
 				if(blabla->getlg()!='l')
-					addR(tek->getIK(), ulaz_za_simbol, "EQU_REL");
+					addR(tek->getIK(), ulaz_za_simbol, "direct");
 			}
 			if (tek->getIK() == -1) { blabla->setSection(-5); } //ako je apsolutan, sekcija izmisljena kao znak -5
 			else {
@@ -2145,6 +2154,11 @@ int main(int argc, char* argv[]) {
 					poslR->setSize(tek->getSize());
 				}
 			}
+			else if (pom->getlg() == 'g') { // PROVERI DA LI OVO TREBA
+				addR(pom->getRbr(), tek->getPatch(), "direct");
+				poslR->setSection(tek->getSectionNumber());
+				poslR->setSize(tek->getSize());
+			}
 		}
 
 		ofstream outdata;
@@ -2160,7 +2174,7 @@ int main(int argc, char* argv[]) {
 
 		// ISPIS SYMBOL TABLE
 		for (Symbol_Table*tek = prvi; tek != nullptr; tek = tek->next) {
-			if (tek->getlg() == 'l' && tek->getSection() == -5 && tek->getDefined() == false) throw "ERROR! LOCAL AND UNDEFINED! ";
+			if (tek->getlg() == 'l' && tek->getSection() == -5 && tek->getDefined() == false) throw "ERROR! LOCAL AND UNDEFINED! " + tek->getName();
 			outdata << left;
 			outdata << setw(10) << tek->getRbr() << setw(10) << tek->getSection()<< setw(10) << tek->getlg() << setw(10) << tek->getDefined() 
 					<< setw(10) << tek->getValue() << setw(10) << tek->getSize()<< setw(10) << tek->getName() << setw(10) << tek->getEqu()<< setw(10) << endl;
@@ -2192,7 +2206,7 @@ int main(int argc, char* argv[]) {
 		outdata.close();
 		inFile.close();
 	}
-	/*Simbol koji je EQU, zavistan od extern simbola i globalan -> .extern b .global a .equ a, 5-b -> ide EQU_REL zapis
+	/*Simbol koji je EQU, zavistan od extern simbola i globalan -> .extern b .global a .equ a, 5-b -> ide direct zapis
 		=> LINKERU, menjaj b, nemoj mene pomerati, pusti da se na osnovu te promene i ja promenim.
 
 	Simbol koji je EQU, zavistan od extern simbola i lokalan -> .extern b .equ a, 5-b -> nema EQU zapisa

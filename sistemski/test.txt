@@ -1,6 +1,18 @@
 
 .section proba: 
 
-.equ a, 10
+labela1: .global labela1
+.skip 50
+labela2: .global labela2
+
+.byte a
+
+.equ a, labela1
+PUSH a(%PC)
+
+.equ bb, labela2
+PUSH bb(%PC)
+
+.global bb
 
 .end

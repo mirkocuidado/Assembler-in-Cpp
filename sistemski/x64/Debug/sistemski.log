@@ -14,18 +14,18 @@ c:\users\hp\desktop\sistemski\sistemski\equ_table.h(5): warning C4067: unexpecte
 c:\users\hp\desktop\sistemski\sistemski\equ_table.h(59): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
 c:\users\hp\desktop\sistemski\sistemski\equ_table.h(60): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
 c:\users\hp\desktop\sistemski\sistemski\main.cpp(295): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(870): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(894): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(920): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(975): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1137): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1158): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1190): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1339): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1464): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1639): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1727): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1756): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1914): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(879): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(903): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(929): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(984): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1146): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1167): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1199): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1348): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1473): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1648): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1736): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1765): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1923): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
 c:\users\hp\desktop\sistemski\sistemski\main.cpp(103): warning C4715: 'decToBinary': not all control paths return a value
   sistemski.vcxproj -> C:\Users\HP\Desktop\sistemski\x64\Debug\sistemski.exe
