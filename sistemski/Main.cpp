@@ -8,10 +8,10 @@
 #include <exception>
 #include <vector>
 
-#include "Symbol_Table.h";
-#include "For_Table.h";
-#include "Reloc_Table.h";
-#include "Equ_Table.h";
+#include "Symbol_Table.h"
+#include "For_Table.h"
+#include "Reloc_Table.h"
+#include "Equ_Table.h"
 
 using namespace std;
 
@@ -70,7 +70,7 @@ string lose_extra_white_space(string s) {
 			pom += " ";
 		}
 	}
-	return pom += '\n';
+	return pom + '\r';
 }
 
 string decToBinary(int n, int p)
@@ -193,7 +193,8 @@ void addF(int p, string s, int sn, string sek, char ss = ' ') {
 	}
 }
 
-bool circle(regex numberr) {
+bool circle() {
+	regex numberr("^(\\+|-)?[0-9]+|(\\+|-)?(0x|0X)[0-9A-Fa-f]{2}|(\\+|-)?(0x|0X)[0-9A-Fa-f]{4}$");
 	for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 		vector<string> s1 = tek->getNizBukvalno();
 		for (int i = 0; i < s1.size(); i++) {
@@ -313,14 +314,14 @@ int main(int argc, char* argv[]) {
 			bool daLiImamLabelu = false;
 			bool reseno = false;
 			int flag = 2;
-			
+
 			if (item[i][0] != '.') {
-				while (item[i][jj] != '\n') {
+				while (item[i][jj] != '\r') {
 					if (item[i][jj] == ':') {
 						jj++; // preskace :
 
 						while (item[i][jj] == ' ') jj++;
-						if (item[i][jj] == '\n') flag = 1;
+						if (item[i][jj] == '\r') flag = 1;
 						else if (item[i][jj] == '.') { flag = 2; isInstruction = false; daLiImamLabelu = true; }
 						else { flag = 2; isInstruction = true; daLiImamLabelu = true; }
 						reseno = true;
@@ -393,7 +394,7 @@ int main(int argc, char* argv[]) {
 						string posleTacke = "";
 						br++;
 
-						while (item[i][br] != ' ' && item[i][br] != '\n') {
+						while (item[i][br] != ' ' && item[i][br] != '\r') {
 							posleTacke += item[i][br];
 							br++;
 						}
@@ -401,7 +402,7 @@ int main(int argc, char* argv[]) {
 							br++; // preskoci ' '
 
 						// END:
-						if (posleTacke == "end" || posleTacke =="end\n") {
+						if (posleTacke == "end" || posleTacke == "end\r") {
 							bilo_end = true;
 							Symbol_Table* sec = isInSymbol_Table(SEKCIJA);
 							if (sec != nullptr) {
@@ -426,7 +427,7 @@ int main(int argc, char* argv[]) {
 							br++; // preskoci ':'
 
 							while (item[i][br] == ' ') br++;
-							if (item[i][br] != '\n') throw "Error while reading .section " + item[i];
+							if (item[i][br] != '\r') throw "Error while reading .section " + item[i];
 
 							Symbol_Table* pom = isInSymbol_Table(SEKCIJA);
 							if (pom != nullptr) {
@@ -442,7 +443,7 @@ int main(int argc, char* argv[]) {
 							}
 
 							SEKCIJA = s1;
-							for (int j= 0; j< eksterni.size(); j++) if (eksterni[j] == SEKCIJA) { throw "SECTION CAN'T BE EXTERN!!! " + item[i]; break; }
+							for (int j = 0; j < eksterni.size(); j++) if (eksterni[j] == SEKCIJA) { throw "SECTION CAN'T BE EXTERN!!! " + item[i]; break; }
 							Symbol_Table* sec = isInSymbol_Table(SEKCIJA);
 							if (sec != nullptr) {
 								if (sec->getRbr() != sec->getSection()) throw "THERE IS A SYMBOL OF THIS NAME! " + item[i];
@@ -465,12 +466,12 @@ int main(int argc, char* argv[]) {
 							bool ima_param = false;
 							bool zarez = false;
 
-							while (item[i][br] != '\n') {
+							while (item[i][br] != '\r') {
 								while (item[i][br] == ' ') br++;
-								while (item[i][br] != ',' && item[i][br] != '\n') {
+								while (item[i][br] != ',' && item[i][br] != '\r') {
 									if (s1 != "" && item[i][br] == ' ') {
 										while (item[i][br] == ' ') br++;
-										if (item[i][br] == ',' || item[i][br] == '\n') break;
+										if (item[i][br] == ',' || item[i][br] == '\r') break;
 										else throw "ERROR! " + item[i];
 									}
 									s1 += item[i][br];
@@ -480,17 +481,17 @@ int main(int argc, char* argv[]) {
 
 								if (item[i][br] == ',' && s1 == "") throw " ',' error! " + item[i];
 								if (item[i][br] == ',' && s1 != "") zarez = true;
-								if (item[i][br] == '\n' && zarez == true && ima_param == true) throw "ERROR!!! " + item[i];
-								if (item[i][br] != '\n')
+								if (item[i][br] == '\r' && zarez == true && ima_param == true) throw "ERROR!!! " + item[i];
+								if (item[i][br] != '\r')
 									br++;
 
 								if (s1 != "") {
 									ima_param = true;
 									if (regex_match(s1, numberr)) {
 										if (s1.size() > 4 && s1[0] == '0' && s1[1] == 'x') throw "ERROR WITH HEXA! " + item[i];
-										if (stoi(s1,nullptr,0) < -129 || stoi(s1,nullptr,0) > 127) throw "ERROR OF SIZE FOR BYTE!";
+										if (stoi(s1, nullptr, 0) < -129 || stoi(s1, nullptr, 0) > 127) throw "ERROR OF SIZE FOR BYTE!";
 										else {
-											string s = decToBinary(stoi(s1,nullptr,0), 1);
+											string s = decToBinary(stoi(s1, nullptr, 0), 1);
 											codeC += binary_hexa(s);
 										}
 									}
@@ -499,9 +500,9 @@ int main(int argc, char* argv[]) {
 										codeC += "00";
 										if (pomm != nullptr) {
 											if (pomm->getDefined() == true && pomm->getlg() == 'g') {
-												addR(pomm->getRbr(), LC, "direct"); poslR->setSize('b');
+												addR(pomm->getRbr(), LC, "direct"); poslR->setSize('b'); poslR->setSection(BROJ_SEKCIJE);
 											}
-											else if(pomm->getlg()=='l') addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'b');
+											else if (pomm->getlg() == 'l') addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'b');
 										}
 										else {
 											add(s1, -5, 'l', false, 0, 0);
@@ -525,12 +526,12 @@ int main(int argc, char* argv[]) {
 							bool ima_param = false;
 							bool zarez = false;
 
-							while (item[i][br] != '\n') {
+							while (item[i][br] != '\r') {
 								while (item[i][br] == ' ') br++;
-								while (item[i][br] != ',' && item[i][br] != '\n') {
+								while (item[i][br] != ',' && item[i][br] != '\r') {
 									if (s1 != "" && item[i][br] == ' ') {
 										while (item[i][br] == ' ') br++;
-										if (item[i][br] == ',' || item[i][br] == '\n') break;
+										if (item[i][br] == ',' || item[i][br] == '\r') break;
 										else throw "ERROR! " + item[i];
 									}
 									s1 += item[i][br];
@@ -540,16 +541,16 @@ int main(int argc, char* argv[]) {
 
 								if (item[i][br] == ',' && s1 == "") throw " ',' error! " + item[i];
 								if (item[i][br] == ',' && s1 != "") zarez = true;
-								if (item[i][br] == '\n' && zarez == true && ima_param == true) throw "ERROR!!! " + item[i];
-								if (item[i][br] != '\n')
+								if (item[i][br] == '\r' && zarez == true && ima_param == true) throw "ERROR!!! " + item[i];
+								if (item[i][br] != '\r')
 									br++;
 
 								if (s1 != "") {
 									ima_param = true;
 									if (regex_match(s1, numberr)) {
 										if (s1.size() > 6 && s1[0] == '0' && s1[1] == 'x') throw "ERROR WITH HEXA! " + item[i];
-										if (stoi(s1,nullptr,0) < -32769 || stoi(s1,nullptr,0) > 32767) throw "ERROR OF SIZE FOR WORD!";
-										string s = decToBinary(stoi(s1,nullptr,0), 2);
+										if (stoi(s1, nullptr, 0) < -32769 || stoi(s1, nullptr, 0) > 32767) throw "ERROR OF SIZE FOR WORD!";
+										string s = decToBinary(stoi(s1, nullptr, 0), 2);
 										codeC += binary_hexa(s);
 									}
 									else {
@@ -557,7 +558,7 @@ int main(int argc, char* argv[]) {
 										codeC += "0000";
 										if (pomm != nullptr) {
 											if (pomm->getDefined() == true && pomm->getlg() == 'g') addR(pomm->getRbr(), LC, "direct");
-											else if(pomm->getlg()=='l') addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'w');
+											else if (pomm->getlg() == 'l') addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'w');
 										}
 										else {
 											add(s1, -5, 'l', false, 0, 0);
@@ -576,19 +577,19 @@ int main(int argc, char* argv[]) {
 							if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION!";
 
 							string s1 = "";
-							while (item[i][br] != '\n') {
-								while (item[i][br] != '\n' && item[i][br] != ' ') {
+							while (item[i][br] != '\r') {
+								while (item[i][br] != '\r' && item[i][br] != ' ') {
 									if (item[i][br] != ' ')
 										s1 += item[i][br];
 									br++;
 								}
 								while (item[i][br] == ' ')
 									br++;
-								if (item[i][br] != '\n') throw ".skip symbol ERROR " + item[i];
+								if (item[i][br] != '\r') throw ".skip symbol ERROR " + item[i];
 
 								if (s1 != "") {
 									if (regex_match(s1, numberr)) {
-										int a = stoi(s1,nullptr,0); if (a < 0) throw "NEGATIVE NUMBER!";
+										int a = stoi(s1, nullptr, 0); if (a < 0) throw "NEGATIVE NUMBER!";
 										LC = LC + a;
 
 										for (int i = 0; i < a; i++) {
@@ -603,62 +604,17 @@ int main(int argc, char* argv[]) {
 						}
 						// GLOBAL:
 						else if (posleTacke == "global") {
-
-						string s1 = "";
-
-						bool ima_param = false;
-						bool zarez = false;
-
-						while (item[i][br] != '\n') {
-							while (item[i][br] == ' ') br++;
-							while (item[i][br] != ',' && item[i][br] != '\n') {
-								if (s1 != "" && item[i][br] == ' ') {
-									while (item[i][br] == ' ') br++;
-									if (item[i][br] == ',' || item[i][br] == '\n') break;
-									else throw "ERROR! " + item[i];
-								}
-								s1 += item[i][br];
-								zarez = false;
-								br++;
-							}
-
-							if (item[i][br] == ',' && s1 == "") throw " ',' error! " + item[i];
-							if (item[i][br] == ',' && s1 != "") zarez = true;
-							if (item[i][br] == '\n' && zarez == true && ima_param == true) throw "ERROR!!! " + item[i];
-							if (item[i][br] != '\n')
-								br++;
-
-							if (regex_match(s1, numberr)) throw ".global + number ERROR " + item[i];
-
-							if (s1 != "") {
-								globalni.push_back(s1);
-								ima_param = true;
-								Symbol_Table* pom = isInSymbol_Table(s1);
-								if (pom != nullptr) {
-									if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE GLOBAL" + item[i];
-									for (int i = 0; i < eksterni.size(); i++) { if (eksterni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i]; }
-									pom->setlg('g');
-								}
-								else add(s1, -5, 'g', false, 0, 0);
-							}
-							s1 = "";
-						}
-						if (ima_param == false) throw ".global ERROR " + item[i];
-						if (item[i][br - 1] == ',') throw ".global ERROR " + item[i];
-						}  // dodati jos LC i broj sekcije
-						// EXTERN:
-						else if (posleTacke == "extern") {
 							string s1 = "";
 
 							bool ima_param = false;
 							bool zarez = false;
 
-							while (item[i][br] != '\n') {
+							while (item[i][br] != '\r') {
 								while (item[i][br] == ' ') br++;
-								while (item[i][br] != ',' && item[i][br] != '\n') {
+								while (item[i][br] != ',' && item[i][br] != '\r') {
 									if (s1 != "" && item[i][br] == ' ') {
 										while (item[i][br] == ' ') br++;
-										if (item[i][br] == ',' || item[i][br] == '\n') break;
+										if (item[i][br] == ',' || item[i][br] == '\r') break;
 										else throw "ERROR! " + item[i];
 									}
 									s1 += item[i][br];
@@ -668,8 +624,52 @@ int main(int argc, char* argv[]) {
 
 								if (item[i][br] == ',' && s1 == "") throw " ',' error! " + item[i];
 								if (item[i][br] == ',' && s1 != "") zarez = true;
-								if (item[i][br] == '\n' && zarez == true && ima_param == true) throw "ERROR!!! " + item[i];
-								if (item[i][br] != '\n')
+								if (item[i][br] == '\r' && zarez == true && ima_param == true) throw "ERROR!!! " + item[i];
+								if (item[i][br] != '\r')
+									br++;
+
+								if (regex_match(s1, numberr)) throw ".global + number ERROR " + item[i];
+
+								if (s1 != "") {
+									globalni.push_back(s1);
+									ima_param = true;
+									Symbol_Table* pom = isInSymbol_Table(s1);
+									if (pom != nullptr) {
+										if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE GLOBAL" + item[i];
+										for (int i = 0; i < eksterni.size(); i++) { if (eksterni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i]; }
+										pom->setlg('g');
+									}
+									else add(s1, -5, 'g', false, 0, 0);
+								}
+								s1 = "";
+							}
+							if (ima_param == false) throw ".global ERROR " + item[i];
+							if (item[i][br - 1] == ',') throw ".global ERROR " + item[i];
+						}  // dodati jos LC i broj sekcije
+						// EXTERN:
+						else if (posleTacke == "extern") {
+							string s1 = "";
+
+							bool ima_param = false;
+							bool zarez = false;
+
+							while (item[i][br] != '\r') {
+								while (item[i][br] == ' ') br++;
+								while (item[i][br] != ',' && item[i][br] != '\r') {
+									if (s1 != "" && item[i][br] == ' ') {
+										while (item[i][br] == ' ') br++;
+										if (item[i][br] == ',' || item[i][br] == '\r') break;
+										else throw "ERROR! " + item[i];
+									}
+									s1 += item[i][br];
+									zarez = false;
+									br++;
+								}
+
+								if (item[i][br] == ',' && s1 == "") throw " ',' error! " + item[i];
+								if (item[i][br] == ',' && s1 != "") zarez = true;
+								if (item[i][br] == '\r' && zarez == true && ima_param == true) throw "ERROR!!! " + item[i];
+								if (item[i][br] != '\r')
 									br++;
 
 								if (regex_match(s1, numberr)) throw ".extern + number ERROR " + item[i];
@@ -682,10 +682,10 @@ int main(int argc, char* argv[]) {
 										if (pom->getRbr() == pom->getSection()) throw "SECTION CAN'T BE EXTERN" + item[i];
 										if (pom->getDefined() == true) throw "SYMBOL CAN'T BE DEFINED!" + item[i];
 										for (int i = 0; i < globalni.size(); i++) { if (globalni[i] == s1) throw "CAN'T BE EXTERN AND GLOBAL!" + item[i]; }
-										pom->setlg('g');  
+										pom->setlg('g');
 									}
 									else add(s1, 0, 'g', false, 0, 0);
-								
+
 								}
 								s1 = "";
 							}
@@ -710,7 +710,7 @@ int main(int argc, char* argv[]) {
 							if (pom != nullptr && pom->getDefined() == true) throw ".equ ERROR " + item[i];
 							for (int i = 0; i < eksterni.size(); i++) if (s1 == eksterni[i]) throw "IT's EXTERN, CAN'T BE .equ! " + item[i];
 
-							while (item[i][br] != '\n') {
+							while (item[i][br] != '\r') {
 								s2 += item[i][br];
 								br++;
 							}
@@ -719,8 +719,8 @@ int main(int argc, char* argv[]) {
 							bool flagg = false;
 
 							for (int j = 0; j < s2.size(); j++) {
-								if (s2[j] != '+' && s2[j] != '-' && s2[j] != '\n') {
-									if (s2[j] != ' '){
+								if (s2[j] != '+' && s2[j] != '-' && s2[j] != '\r') {
+									if (s2[j] != ' ') {
 										pomocni += s2[j];
 									}
 								}
@@ -728,7 +728,7 @@ int main(int argc, char* argv[]) {
 									if (pomocni == "" && j != 0) throw "ERROR! " + item[i];
 									else if (pomocni != "") {
 										niz[nizI++] = pomocni;
-										if (flagg == true || (flagg==false && nizZ==0)) flagg = false; else throw "EXPRESSION ERROR 2! " + item[i];
+										if (flagg == true || (flagg == false && nizZ == 0)) flagg = false; else throw "EXPRESSION ERROR 2! " + item[i];
 										pomocni = "";
 									}
 
@@ -741,9 +741,9 @@ int main(int argc, char* argv[]) {
 								flagg = false;
 							}
 
-							if (flagg==true) throw "ERROR EXPRESSION 3! " + item[i];
+							if (flagg == true) throw "ERROR EXPRESSION 3! " + item[i];
 
-							
+
 							int izraz = 0;
 							int flag = 0;
 
@@ -812,19 +812,19 @@ int main(int argc, char* argv[]) {
 							codeC += "00";
 
 							while (item[i][br] == ' ' || item[i][br] == '\t') br++;
-							if (item[i][br] == '\n') continue; else throw "ERROR WITH OPERANDS! " + item[i];
+							if (item[i][br] == '\r') continue; else throw "ERROR WITH OPERANDS! " + item[i];
 						}
 						else if (s1 == "IRET") {
 							LC++;
 							codeC += "08";
 
-							while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] == '\n') continue; else throw "ERROR WITH OPERANDS! " + item[i];
+							while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] == '\r') continue; else throw "ERROR WITH OPERANDS! " + item[i];
 						}
 						else if (s1 == "RET") {
 							LC++;
 							codeC += "10";
 
-							while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] == '\n') continue; else throw "ERROR WITH OPERANDS! " + item[i];
+							while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] == '\r') continue; else throw "ERROR WITH OPERANDS! " + item[i];
 						}
 						else {
 
@@ -854,18 +854,18 @@ int main(int argc, char* argv[]) {
 
 									br++;
 									while (item[i][br] == ' ') br++;
-									while (item[i][br] != ' ' && item[i][br] != '\n') s2 += item[i][br++];
+									while (item[i][br] != ' ' && item[i][br] != '\r') s2 += item[i][br++];
 									while (item[i][br] == ' ') br++;
-									if (item[i][br] != '\n') throw "ERROR WITH SPACE! " + item[i];
+									if (item[i][br] != '\r') throw "ERROR WITH SPACE! " + item[i];
 
 									if (pazi == 2) lucky += "1"; //ako je w, tada je size = 1
 									else lucky += "0"; // za b ili nista je size=0, pa ako bude >255, menja se
 
 									if (regex_match(s2, numberr)) {
-										if (stoi(s2,nullptr,0) > 32767 || stoi(s2,nullptr,0) < -32768) throw "OPERAND TOO BIG! " + item[i];
+										if (stoi(s2, nullptr, 0) > 32767 || stoi(s2, nullptr, 0) < -32768) throw "OPERAND TOO BIG! " + item[i];
 
 										lucky += "0000000000";
-										lucky += decToBinary(stoi(s2,nullptr,0), 2);
+										lucky += decToBinary(stoi(s2, nullptr, 0), 2);
 										lucky[5] = '1';
 									}
 									else {
@@ -886,10 +886,10 @@ int main(int argc, char* argv[]) {
 
 									br++;
 									while (item[i][br] == ' ') br++;
-									while (item[i][br] != ' ' && item[i][br] != '\n') s2 += item[i][br++];
+									while (item[i][br] != ' ' && item[i][br] != '\r') s2 += item[i][br++];
 									br++;
-									if (br < item[i].size()) { while (item[i][br] == ' ') br++; if (item[i][br] != '\n') throw "ERROR WITH SPACE - regdir! " + item[i]; }
-									else if (item[i][br - 1] != '\n') throw "ERROR WITH SPACE - regdir! " + item[i];
+									if (br < item[i].size()) { while (item[i][br] == ' ') br++; if (item[i][br] != '\r') throw "ERROR WITH SPACE - regdir! " + item[i]; }
+									else if (item[i][br - 1] != '\r') throw "ERROR WITH SPACE - regdir! " + item[i];
 									if (s2 == "") throw "NO s2 HERE!" + item[i];
 
 									if (s2.size() == 2 || s2 == "PSW") {
@@ -911,13 +911,13 @@ int main(int argc, char* argv[]) {
 									br++;
 									if (item[i][br] == '%') {
 										br++;
-										while (item[i][br] != ' ' && item[i][br] != ')' && item[i][br] != '\n') { s2 += item[i][br]; br++; }
+										while (item[i][br] != ' ' && item[i][br] != ')' && item[i][br] != '\r') { s2 += item[i][br]; br++; }
 										if (item[i][br] == ' ') throw "ERROR WITH SPACE - regind! " + item[i];
-										if (item[i][br] == '\n') throw "ERROR WITH NEW LINE - regind! " + item[i];
+										if (item[i][br] == '\r') throw "ERROR WITH NEW LINE - regind! " + item[i];
 										else {
 											br++;
 											while (item[i][br] == ' ') br++;
-											if (item[i][br] != '\n') throw "ERROR WITH SPACE - regind! " + item[i];
+											if (item[i][br] != '\r') throw "ERROR WITH SPACE - regind! " + item[i];
 										}
 
 										lucky += "100"; lucky += "010";
@@ -932,18 +932,18 @@ int main(int argc, char* argv[]) {
 								else {
 									if (pazi == 1) throw "CAN'T BE B AND REGDIR! " + item[i];
 
-									while (item[i][br] != '(' && item[i][br] != '\n' && item[i][br] != ' ') s4 += item[i][br++];
+									while (item[i][br] != '(' && item[i][br] != '\r' && item[i][br] != ' ') s4 += item[i][br++];
 									// memdir
-									if (item[i][br] == ' ' || item[i][br] == '\n') {
-										while (item[i][br] == ' ' && item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
+									if (item[i][br] == ' ' || item[i][br] == '\r') {
+										while (item[i][br] == ' ' && item[i][br] == '\t') br++; if (item[i][br] != '\r') throw "SPACE ERROR - memdir!";
 
-										if (regex_match(s4, numberr) == false && s4[0] != '0' && s4[1] != 'x') 
+										if (regex_match(s4, numberr) == false && s4[0] != '0' && s4[1] != 'x')
 											process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 2);
 
 										lucky += "100";
 										lucky += "10000000";
 
-										if (regex_match(s4, numberr)) lucky += decToBinary(stoi(s4,nullptr,0), 2);
+										if (regex_match(s4, numberr)) lucky += decToBinary(stoi(s4, nullptr, 0), 2);
 										else lucky += "0000000000000000";
 
 									}
@@ -957,7 +957,7 @@ int main(int argc, char* argv[]) {
 										lucky += "100011";
 										if (item[i][br] == '%') {
 											br++;
-											while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\n') s2 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
+											while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\r') s2 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
 											if (s2.size() == 2 || s2 == "PSW")
 												lucky += getReg(s2);
 											else throw "NOT GOOD s2 HERE!" + item[i];
@@ -966,7 +966,7 @@ int main(int argc, char* argv[]) {
 
 										if (regex_match(s4, numberr)) {
 											lucky += decToBinary(stoi(s4, nullptr, 0), 2);
-											int m = stoi(s4,nullptr,0);
+											int m = stoi(s4, nullptr, 0);
 											if (s2 == "PC" || s2 == "pc" || s2 == "r7" || s2 == "R7") throw "PC only with non NUMBERS! " + item[i];
 										}
 										else {
@@ -1029,22 +1029,22 @@ int main(int argc, char* argv[]) {
 										else lucky += "0";
 
 										if (regex_match(s2, numberr)) {
-											if (stoi(s2,nullptr,0) < 128 && stoi(s2,nullptr,0) > -129) {
+											if (stoi(s2, nullptr, 0) < 128 && stoi(s2, nullptr, 0) > -129) {
 												lucky += "0000000000";
 												if (pazi == 0) lucky += "";
-												else if (pazi == 1) lucky += decToBinary(stoi(s2,nullptr,0), 1);
-												else if (pazi == 2) lucky += decToBinary(stoi(s2,nullptr,0), 2);
+												else if (pazi == 1) lucky += decToBinary(stoi(s2, nullptr, 0), 1);
+												else if (pazi == 2) lucky += decToBinary(stoi(s2, nullptr, 0), 2);
 											}
 											else {
-												if (stoi(s2,nullptr,0) > 32767 || stoi(s2,nullptr,0) < -32768) throw "OPERAND TOO BIG! " + item[i];
+												if (stoi(s2, nullptr, 0) > 32767 || stoi(s2, nullptr, 0) < -32768) throw "OPERAND TOO BIG! " + item[i];
 												if (pazi == 1) throw "Instruction with sufix B and >255 number ERROR!" + item[i];
 												lucky[5] = '1';
 												lucky += "0000000000";
-												lucky += decToBinary(stoi(s2,nullptr,0), 2);
+												lucky += decToBinary(stoi(s2, nullptr, 0), 2);
 											}
 										}
 										else {
-											
+
 											lucky += "0000000000";
 											Symbol_Table* pom = isInSymbol_Table(s2);
 											if (pom == nullptr)
@@ -1065,10 +1065,10 @@ int main(int argc, char* argv[]) {
 										if (item[i][br] == '%') {
 											br++;
 											if (item[i][br] == ' ') throw "YOU CAN'T HAVE % AND THEN ' ' " + item[i];
-											while (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++];
+											while (item[i][br] != ' ' && item[i][br] != '\r') s3 += item[i][br++];
 											br++;
-											if (br < item[i].size()) { while (item[i][br] == ' ') br++; if (item[i][br] != '\n') throw "ERROR WITH SPACE - regdir! " + item[i]; }
-											else if (item[i][br - 1] != '\n') throw "ERROR WITH SPACE - regdir! " + item[i];
+											if (br < item[i].size()) { while (item[i][br] == ' ') br++; if (item[i][br] != '\r') throw "ERROR WITH SPACE - regdir! " + item[i]; }
+											else if (item[i][br - 1] != '\r') throw "ERROR WITH SPACE - regdir! " + item[i];
 											if (s3 == "") throw "NO s2 HERE!" + item[i];
 
 											if (s3.size() == 2 || s3 == "PSW" || s3 == "psw") { //s3 je registar bez h ili l
@@ -1076,8 +1076,8 @@ int main(int argc, char* argv[]) {
 												if (pazi == 1) throw "CAN'T USE B SUFIX AND WHOLE REGISTER! " + item[i];
 
 												if (regex_match(s2, numberr)) {
-													if (pazi == 0 && stoi(s2,nullptr,0) < 128 && stoi(s2,nullptr,0) > -129)
-														lucky += decToBinary(stoi(s2,nullptr,0), 2);
+													if (pazi == 0 && stoi(s2, nullptr, 0) < 128 && stoi(s2, nullptr, 0) > -129)
+														lucky += decToBinary(stoi(s2, nullptr, 0), 2);
 												}
 
 												lucky += "001"; //regdir
@@ -1087,8 +1087,8 @@ int main(int argc, char* argv[]) {
 												lucky[5] = '0';
 												if (pazi == 2) throw "Instruction with sufix W and h/l ERROR!" + item[i]; // ne sme MOVW sa high.low
 												if (regex_match(s2, numberr)) {
-													if (stoi(s2,nullptr,0) < -128 || stoi(s2,nullptr,0) > 127) throw "h/l and too big number ERROR!" + item[i]; // ne sme npr. MOV $1000, %R1 high/low
-													if (pazi == 0) lucky += decToBinary(stoi(s2,nullptr,0), 1);
+													if (stoi(s2, nullptr, 0) < -128 || stoi(s2, nullptr, 0) > 127) throw "h/l and too big number ERROR!" + item[i]; // ne sme npr. MOV $1000, %R1 high/low
+													if (pazi == 0) lucky += decToBinary(stoi(s2, nullptr, 0), 1);
 												}
 												else throw "Address is 16b and here you have high/low" + item[i];
 
@@ -1105,22 +1105,22 @@ int main(int argc, char* argv[]) {
 											br++;
 
 											if (pazi == 0 && regex_match(s2, numberr)) {
-												if (stoi(s2,nullptr,0) < 128 && stoi(s2,nullptr,0) > -129) { lucky += decToBinary(stoi(s2,nullptr,0), 1); lucky[5] = '0'; }
+												if (stoi(s2, nullptr, 0) < 128 && stoi(s2, nullptr, 0) > -129) { lucky += decToBinary(stoi(s2, nullptr, 0), 1); lucky[5] = '0'; }
 												else {
-													lucky += decToBinary(stoi(s2,nullptr,0), 2); lucky[5] = '1';
+													lucky += decToBinary(stoi(s2, nullptr, 0), 2); lucky[5] = '1';
 												}
 											}
 
 											lucky += "010";
 											if (item[i][br] == '%') {
 												br++;
-												while (item[i][br] != ' ' && item[i][br] != ')' && item[i][br] != '\n') { s3 += item[i][br]; br++; }
+												while (item[i][br] != ' ' && item[i][br] != ')' && item[i][br] != '\r') { s3 += item[i][br]; br++; }
 												if (item[i][br] == ' ') throw "ERROR WITH SPACE - regind! " + item[i];
-												if (item[i][br] == '\n') throw "ERROR WITH NEW LINE - regind! " + item[i];
+												if (item[i][br] == '\r') throw "ERROR WITH NEW LINE - regind! " + item[i];
 												else {
 													br++;
 													while (item[i][br] == ' ') br++;
-													if (item[i][br] != '\n') throw "ERROR WITH SPACE - regind! " + item[i];
+													if (item[i][br] != '\r') throw "ERROR WITH SPACE - regind! " + item[i];
 												}
 
 												if (s3.size() == 2 || s3 == "PSW" || s3 == "psw")
@@ -1131,24 +1131,24 @@ int main(int argc, char* argv[]) {
 										}
 										// immed - regindpom/memdir
 										else {
-											while (item[i][br] != '(' && item[i][br] != '\n' && item[i][br] != ' ') s4 += item[i][br++];
+											while (item[i][br] != '(' && item[i][br] != '\r' && item[i][br] != ' ') s4 += item[i][br++];
 
 											//memdir
-											if (item[i][br] == ' ' || item[i][br] == '\n') {
+											if (item[i][br] == ' ' || item[i][br] == '\r') {
 
 												if (pazi == 0 && regex_match(s2, numberr)) {
-													if (stoi(s2,nullptr,0) < 128 && stoi(s2,nullptr,0) > -129) { lucky += decToBinary(stoi(s2,nullptr,0), 1); lucky[5] = '0'; }
+													if (stoi(s2, nullptr, 0) < 128 && stoi(s2, nullptr, 0) > -129) { lucky += decToBinary(stoi(s2, nullptr, 0), 1); lucky[5] = '0'; }
 												}
 
-												while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
+												while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\r') throw "SPACE ERROR - memdir!";
 
-												if (regex_match(s4, numberr) == false) 
+												if (regex_match(s4, numberr) == false)
 													process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, (lucky.size() / 8 + 1));
 
 												lucky += "10000000";
 												if (regex_match(s4, numberr)) {
 													lucky[5] = '1';
-													lucky += decToBinary(stoi(s4,nullptr,0), 2);
+													lucky += decToBinary(stoi(s4, nullptr, 0), 2);
 												}
 												else {
 													lucky += "0000000000000000";
@@ -1158,7 +1158,7 @@ int main(int argc, char* argv[]) {
 											else if (item[i][br] == '(') {
 
 												if (pazi == 0 && regex_match(s2, numberr)) {
-													if (stoi(s2,nullptr,0) < 128 && stoi(s2,nullptr,0) > -129) { lucky += decToBinary(stoi(s2,nullptr,0), 1); lucky[5] = '0'; }
+													if (stoi(s2, nullptr, 0) < 128 && stoi(s2, nullptr, 0) > -129) { lucky += decToBinary(stoi(s2, nullptr, 0), 1); lucky[5] = '0'; }
 												}
 
 												br++;
@@ -1169,10 +1169,10 @@ int main(int argc, char* argv[]) {
 												lucky += "011";
 												if (item[i][br] == '%') {
 													br++;
-													while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
+													while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\r') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
 													if (item[i][br] == ')') br++;
 													while (item[i][br] == ' ') br++;
-													if (item[i][br] != '\n') throw "SOME GARBAGE AFTER REGINDPOM! " + item[i];
+													if (item[i][br] != '\r') throw "SOME GARBAGE AFTER REGINDPOM! " + item[i];
 
 													if (s3.size() == 2 || s3 == "PSW" || s3 == "psw")
 														lucky += getReg(s3);
@@ -1181,7 +1181,7 @@ int main(int argc, char* argv[]) {
 												else throw "MUST BE WITHOUT SPACE! " + item[i];
 
 												if (regex_match(s4, numberr)) {
-													lucky += decToBinary(stoi(s4,nullptr,0), 2);
+													lucky += decToBinary(stoi(s4, nullptr, 0), 2);
 												}
 												else {
 													if (s3 == "PC" || s3 == "pc" || s3 == "r7" || s3 == "R7") {
@@ -1238,9 +1238,9 @@ int main(int argc, char* argv[]) {
 										if (item[i][br] == '%') {
 											br++;
 											if (item[i][br] == ' ') throw "YOU CAN'T HAVE % AND THEN ' ' " + item[i];
-											while (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++];
+											while (item[i][br] != ' ' && item[i][br] != '\r') s3 += item[i][br++];
 											if (item[i][br] == ' ') {
-												while (item[i][br] == ' ') br++; if (item[i][br] != '\n') throw "ERROR, NO COMA!";
+												while (item[i][br] == ' ') br++; if (item[i][br] != '\r') throw "ERROR, NO COMA!";
 											}
 
 											if (s3.size() == 2 || s3 == "PSW" || s3 == "psw") {
@@ -1269,13 +1269,13 @@ int main(int argc, char* argv[]) {
 											br++;
 											if (item[i][br] == '%') {
 												br++;
-												while (item[i][br] != ' ' && item[i][br] != ')' && item[i][br] != '\n') { s3 += item[i][br]; br++; }
+												while (item[i][br] != ' ' && item[i][br] != ')' && item[i][br] != '\r') { s3 += item[i][br]; br++; }
 												if (item[i][br] == ' ') throw "ERROR WITH SPACE - regind! " + item[i];
-												if (item[i][br] == '\n') throw "ERROR WITH NEW LINE - regind! " + item[i];
+												if (item[i][br] == '\r') throw "ERROR WITH NEW LINE - regind! " + item[i];
 												else {
 													br++;
 													while (item[i][br] == ' ') br++;
-													if (item[i][br] != '\n') throw "ERROR WITH SPACE - regind! " + item[i];
+													if (item[i][br] != '\r') throw "ERROR WITH SPACE - regind! " + item[i];
 												}
 
 												if (pazi == 0 && s2.size() == 2) lucky[5] = '1';
@@ -1289,11 +1289,11 @@ int main(int argc, char* argv[]) {
 										}
 										// regdir - regindpom/memdir
 										else {
-											while (item[i][br] != '(' && item[i][br] != '\n' && item[i][br] != ' ') s4 += item[i][br++];
+											while (item[i][br] != '(' && item[i][br] != '\r' && item[i][br] != ' ') s4 += item[i][br++];
 
 											//memdir
-											if (item[i][br] == ' ' || item[i][br] == '\n') {
-												while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
+											if (item[i][br] == ' ' || item[i][br] == '\r') {
+												while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\r') throw "SPACE ERROR - memdir!";
 
 												if (regex_match(s4, numberr) == false)
 													process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 3);
@@ -1301,7 +1301,7 @@ int main(int argc, char* argv[]) {
 												lucky += "10000000";
 												if (pazi == 0 && s2.size() == 2) lucky[5] = '1';
 
-												if (regex_match(s4, numberr)) lucky += decToBinary(stoi(s4,nullptr,0), 2);
+												if (regex_match(s4, numberr)) lucky += decToBinary(stoi(s4, nullptr, 0), 2);
 												else lucky += "0000000000000000";
 
 											}
@@ -1316,10 +1316,10 @@ int main(int argc, char* argv[]) {
 
 												if (item[i][br] == '%') {
 													br++;
-													while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
+													while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\r') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
 													if (item[i][br] == ')') br++;
 													while (item[i][br] == ' ') br++;
-													if (item[i][br] != '\n') throw "SOME GARBAGE AFTER REGIND! " + item[i];
+													if (item[i][br] != '\r') throw "SOME GARBAGE AFTER REGIND! " + item[i];
 
 													if (s3.size() == 2 || s3 == "PSW" || s3 == "psw")
 														lucky += getReg(s3);
@@ -1379,9 +1379,9 @@ int main(int argc, char* argv[]) {
 										if (item[i][br] == '%') {
 											br++;
 											if (item[i][br] == ' ') throw "YOU CAN'T HAVE % AND THEN ' ' " + item[i];
-											while (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++];
+											while (item[i][br] != ' ' && item[i][br] != '\r') s3 += item[i][br++];
 											if (item[i][br] == ' ') {
-												while (item[i][br] == ' ') br++; if (item[i][br] != '\n') throw "ERROR, NO COMA!";
+												while (item[i][br] == ' ') br++; if (item[i][br] != '\r') throw "ERROR, NO COMA!";
 											}
 
 											lucky += "001";
@@ -1401,13 +1401,13 @@ int main(int argc, char* argv[]) {
 											br++;
 											if (item[i][br] == '%') {
 												br++;
-												while (item[i][br] != ' ' && item[i][br] != ')' && item[i][br] != '\n') { s3 += item[i][br]; br++; }
+												while (item[i][br] != ' ' && item[i][br] != ')' && item[i][br] != '\r') { s3 += item[i][br]; br++; }
 												if (item[i][br] == ' ') throw "ERROR WITH SPACE - regind! " + item[i];
-												if (item[i][br] == '\n') throw "ERROR WITH NEW LINE - regind! " + item[i];
+												if (item[i][br] == '\r') throw "ERROR WITH NEW LINE - regind! " + item[i];
 												else {
 													br++;
 													while (item[i][br] == ' ') br++;
-													if (item[i][br] != '\n') throw "ERROR WITH SPACE - regind! " + item[i];
+													if (item[i][br] != '\r') throw "ERROR WITH SPACE - regind! " + item[i];
 												}
 											}
 											else throw "CAN'T USE SPACE! " + item[i];
@@ -1419,36 +1419,36 @@ int main(int argc, char* argv[]) {
 										}
 										// regind - regindpom / memdir
 										else {
-											while (item[i][br] != '(' && item[i][br] != '\n' && item[i][br] != ' ') s4 += item[i][br++];
+											while (item[i][br] != '(' && item[i][br] != '\r' && item[i][br] != ' ') s4 += item[i][br++];
 
 											// memdir
-											if (item[i][br] == ' ' || item[i][br] == '\n') {
-												while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
+											if (item[i][br] == ' ' || item[i][br] == '\r') {
+												while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\r') throw "SPACE ERROR - memdir!";
 
 												if (regex_match(s4, numberr) == false)
 													process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 3);
 
 												lucky += "10000000";
 
-												if (regex_match(s4, numberr)) lucky += decToBinary(stoi(s4,nullptr,0), 2);
+												if (regex_match(s4, numberr)) lucky += decToBinary(stoi(s4, nullptr, 0), 2);
 												else lucky += "0000000000000000";
-												
+
 											}
 											// regindpom
 											else if (item[i][br] == '(') {
 												br++;
 
-												if (regex_match(s4, numberr) == false) 
+												if (regex_match(s4, numberr) == false)
 													process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 3);
 
 												lucky += "011";
 
 												if (item[i][br] == '%') {
 													br++;
-													while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
+													while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\r') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
 													if (item[i][br] == ')') br++;
 													while (item[i][br] == ' ') br++;
-													if (item[i][br] != '\n') throw "SOME GARBAGE AFTER! " + item[i];
+													if (item[i][br] != '\r') throw "SOME GARBAGE AFTER! " + item[i];
 
 													if (s3.size() == 2 || s3 == "PSW" || s3 == "psw") lucky += getReg(s3);
 													else throw "NOT GOOD s2 HERE!" + item[i];
@@ -1491,7 +1491,7 @@ int main(int argc, char* argv[]) {
 
 											if (item[i][br] == '%') {
 												br++;
-												while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\n') s2 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
+												while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\r') s2 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
 												if (item[i][br] == ')') br++;
 												while (item[i][br] == ' ') br++;
 												if (item[i][br] != ',') throw "NO COMA HERE! " + item[i];
@@ -1508,7 +1508,7 @@ int main(int argc, char* argv[]) {
 											if (s2 == "PC" || s2 == "pc" || s2 == "R7" || s2 == "r7") SPECIJALNI_FLAG = 1;
 
 											if (regex_match(s2, numberr)) {
-												lucky += decToBinary(stoi(s4,nullptr,0), 2);
+												lucky += decToBinary(stoi(s4, nullptr, 0), 2);
 											}
 											else {
 												if (SPECIJALNI_FLAG == 0)
@@ -1520,9 +1520,9 @@ int main(int argc, char* argv[]) {
 											else if (item[i][br] == '%') {
 												br++;
 												if (item[i][br] == ' ') throw "YOU CAN'T HAVE % AND THEN ' ' " + item[i];
-												while (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++];
+												while (item[i][br] != ' ' && item[i][br] != '\r') s3 += item[i][br++];
 												if (item[i][br] == ' ') {
-													while (item[i][br] == ' ') br++; if (item[i][br] != '\n') throw "ERROR, NO COMA!";
+													while (item[i][br] == ' ') br++; if (item[i][br] != '\r') throw "ERROR, NO COMA!";
 												}
 
 												if (SPECIJALNI_FLAG == 1) { // bio PC gore
@@ -1548,13 +1548,13 @@ int main(int argc, char* argv[]) {
 
 												if (item[i][br] == '%') {
 													br++;
-													while (item[i][br] != ' ' && item[i][br] != ')' && item[i][br] != '\n') { s3 += item[i][br]; br++; }
+													while (item[i][br] != ' ' && item[i][br] != ')' && item[i][br] != '\r') { s3 += item[i][br]; br++; }
 													if (item[i][br] == ' ') throw "ERROR WITH SPACE - regind! " + item[i];
-													if (item[i][br] == '\n') throw "ERROR WITH NEW LINE - regind! " + item[i];
+													if (item[i][br] == '\r') throw "ERROR WITH NEW LINE - regind! " + item[i];
 													else {
 														br++;
 														while (item[i][br] == ' ') br++;
-														if (item[i][br] != '\n') throw "ERROR WITH SPACE - regind! " + item[i];
+														if (item[i][br] != '\r') throw "ERROR WITH SPACE - regind! " + item[i];
 													}
 												}
 												else throw "CAN'T USE SPACE! " + item[i];
@@ -1571,11 +1571,11 @@ int main(int argc, char* argv[]) {
 												else throw "ERROR!" + item[i];
 											}
 											else {
-												while (item[i][br] != '(' && item[i][br] != '\n' && item[i][br] != ' ') s5 += item[i][br++];
+												while (item[i][br] != '(' && item[i][br] != '\r' && item[i][br] != ' ') s5 += item[i][br++];
 
 												// regindpom - memdir
-												if (item[i][br] == ' ' || item[i][br] == '\n') {
-													while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
+												if (item[i][br] == ' ' || item[i][br] == '\r') {
+													while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\r') throw "SPACE ERROR - memdir!";
 
 													if (regex_match(s5, numberr) == false) {
 
@@ -1603,7 +1603,7 @@ int main(int argc, char* argv[]) {
 
 													lucky += "10000000";
 
-													if (regex_match(s5, numberr)) lucky += decToBinary(stoi(s5,nullptr,0), 2);
+													if (regex_match(s5, numberr)) lucky += decToBinary(stoi(s5, nullptr, 0), 2);
 													else lucky += "0000000000000000";
 												}
 												// regindpom - regindpom
@@ -1615,10 +1615,10 @@ int main(int argc, char* argv[]) {
 
 													if (item[i][br] == '%') {
 														br++;
-														while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
+														while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\r') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
 														if (item[i][br] == ')') br++;
 														while (item[i][br] == ' ') br++;
-														if (item[i][br] != '\n') throw "SOME GARBAGE AFTER! " + item[i];
+														if (item[i][br] != '\r') throw "SOME GARBAGE AFTER! " + item[i];
 													}
 													else throw "MUST BE WITHOUT SPACE! " + item[i];
 
@@ -1634,7 +1634,7 @@ int main(int argc, char* argv[]) {
 													else throw "REG SIZE ERROR! " + item[i];
 
 													if (regex_match(s5, numberr))
-														lucky += decToBinary(stoi(s5,nullptr,0), 2);
+														lucky += decToBinary(stoi(s5, nullptr, 0), 2);
 													else {
 														if (s3 == "PC" || s3 == "pc" || s3 == "R7" || s3 == "r7") {
 															poslF->setLinker(-2);
@@ -1653,7 +1653,7 @@ int main(int argc, char* argv[]) {
 											while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != ',') throw "SPACE ERROR - memdir!";
 											br++;
 											while (item[i][br] == ' ') br++;
-											if (item[i][br] == '\n') throw "NO SECOND OPERAND! " + item[i];
+											if (item[i][br] == '\r') throw "NO SECOND OPERAND! " + item[i];
 
 											if (pazi == 2) lucky += "100";
 											else lucky += "000";
@@ -1672,9 +1672,9 @@ int main(int argc, char* argv[]) {
 											if (item[i][br] == '%') {
 												br++;
 												if (item[i][br] == ' ') throw "YOU CAN'T HAVE % AND THEN ' ' " + item[i];
-												while (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++];
+												while (item[i][br] != ' ' && item[i][br] != '\r') s3 += item[i][br++];
 												if (item[i][br] == ' ') {
-													while (item[i][br] == ' ') br++; if (item[i][br] != '\n') throw "ERROR, NO COMA!";
+													while (item[i][br] == ' ') br++; if (item[i][br] != '\r') throw "ERROR, NO COMA!";
 												}
 
 												lucky += "001";
@@ -1696,13 +1696,13 @@ int main(int argc, char* argv[]) {
 
 												if (item[i][br] == '%') {
 													br++;
-													while (item[i][br] != ' ' && item[i][br] != ')'  && item[i][br] != '\n') { s3 += item[i][br]; br++; }
+													while (item[i][br] != ' ' && item[i][br] != ')'  && item[i][br] != '\r') { s3 += item[i][br]; br++; }
 													if (item[i][br] == ' ') throw "ERROR WITH SPACE - regind! " + item[i];
-													if (item[i][br] == '\n') throw "ERROR WITH NEW LINE - regind! " + item[i];
+													if (item[i][br] == '\r') throw "ERROR WITH NEW LINE - regind! " + item[i];
 													else {
 														br++;
 														while (item[i][br] == ' ') br++;
-														if (item[i][br] != '\n') throw "ERROR WITH SPACE - regind! " + item[i];
+														if (item[i][br] != '\r') throw "ERROR WITH SPACE - regind! " + item[i];
 													}
 												}
 												else throw "CAN'T USE SPACE! " + item[i];
@@ -1714,33 +1714,33 @@ int main(int argc, char* argv[]) {
 											}
 											// memdir - regindpom/memdir
 											else {
-												while (item[i][br] != '(' && item[i][br] != '\n' && item[i][br] != ' ') s5 += item[i][br++];
+												while (item[i][br] != '(' && item[i][br] != '\r' && item[i][br] != ' ') s5 += item[i][br++];
 
 												// memdir
-												if (item[i][br] == ' ' || item[i][br] == '\n') {
-													while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
+												if (item[i][br] == ' ' || item[i][br] == '\r') {
+													while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\r') throw "SPACE ERROR - memdir!";
 
 													if (regex_match(s5, numberr) == false)
 														process_move(s5, LC, BROJ_SEKCIJE, SEKCIJA, 5);
 
 													lucky += "10000000";
 
-													if (regex_match(s5, numberr)) lucky += decToBinary(stoi(s5,nullptr,0), 2);
+													if (regex_match(s5, numberr)) lucky += decToBinary(stoi(s5, nullptr, 0), 2);
 													else lucky += "0000000000000000";
 												}
 												// regindpom
 												else if (item[i][br] == '(') {
 													br++;
 
-													if (regex_match(s5, numberr) == false) 
+													if (regex_match(s5, numberr) == false)
 														process_move(s5, LC, BROJ_SEKCIJE, SEKCIJA, ((lucky.size() / 8) + 1));
 
 													if (item[i][br] == '%') {
 														br++;
-														while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\n') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
+														while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\r') s3 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
 														if (item[i][br] == ')') br++;
 														while (item[i][br] == ' ') br++;
-														if (item[i][br] != '\n') throw "SOME GARBAGE AFTER! " + item[i];
+														if (item[i][br] != '\r') throw "SOME GARBAGE AFTER! " + item[i];
 													}
 													else throw "MUST BE WITHOUT SPACE! " + item[i];
 
@@ -1750,8 +1750,8 @@ int main(int argc, char* argv[]) {
 														lucky += getReg(s3);
 													else throw "REG SIZE ERROR! " + item[i];
 
-													if (regex_match(s5, numberr)) 
-														lucky += decToBinary(stoi(s5,nullptr,0), 2);
+													if (regex_match(s5, numberr))
+														lucky += decToBinary(stoi(s5, nullptr, 0), 2);
 													else {
 														if (s3 == "PC" || s3 == "pc" || s3 == "R7" || s3 == "r7") {
 															poslF->setLinker(-2);
@@ -1780,26 +1780,26 @@ int main(int argc, char* argv[]) {
 								else if (s1 == "JGT") lucky += "01000100";
 
 								if (lucky != "") {
-									if (pazi == 1 && s1!="INT") throw "You can't use branches with B sufix! " + item[i];
+									if (pazi == 1 && s1 != "INT") throw "You can't use branches with B sufix! " + item[i];
 									if (BROJ_SEKCIJE == 0) throw "NOT IN SECTION! " + item[i];
 
 									// IMMED
 									if (item[i][br] != '*') {
 										while (item[i][br] == ' ') br++;
-										while (item[i][br] != ' ' && item[i][br] != '\n') s2 += item[i][br++];
-										if (item[i][br] != '\n') throw "ERROR WITH SPACE! " + item[i];
+										while (item[i][br] != ' ' && item[i][br] != '\r') s2 += item[i][br++];
+										if (item[i][br] != '\r') throw "ERROR WITH SPACE! " + item[i];
 										br++;
 										while (item[i][br] == ' ') br++;
 
 										lucky += "00000000"; // 2. bajt
 
 										if (regex_match(s2, numberr)) {
-											if (s1 == "INT" && pazi==1 && (stoi(s2,nullptr,0) < 128 && stoi(s2,nullptr,0) >=0)) { lucky[5] = '0'; lucky += decToBinary(stoi(s2,nullptr,0), 1); }
-											else if (s1 == "INT" && pazi == 1 && (stoi(s2,nullptr,0) > 128 || stoi(s2,nullptr,0) <0)) throw "CAN'T USE SUFIX b HERE!";
+											if (s1 == "INT" && pazi == 1 && (stoi(s2, nullptr, 0) < 128 && stoi(s2, nullptr, 0) >= 0)) { lucky[5] = '0'; lucky += decToBinary(stoi(s2, nullptr, 0), 1); }
+											else if (s1 == "INT" && pazi == 1 && (stoi(s2, nullptr, 0) > 128 || stoi(s2, nullptr, 0) < 0)) throw "CAN'T USE SUFIX b HERE!";
 
-											if (stoi(s2,nullptr,0) > 0 && pazi!=1) {
-												if (stoi(s2,nullptr,0) < 32767)
-													lucky += decToBinary(stoi(s2,nullptr,0), 2);
+											if (stoi(s2, nullptr, 0) > 0 && pazi != 1) {
+												if (stoi(s2, nullptr, 0) < 32767)
+													lucky += decToBinary(stoi(s2, nullptr, 0), 2);
 												else throw "OPERAND TOO BIG! " + item[i];
 											}
 											else if (pazi == 1) {}
@@ -1818,10 +1818,10 @@ int main(int argc, char* argv[]) {
 										if (item[i][br] == '%') {
 											br++;
 											while (item[i][br] == ' ') br++;
-											while (item[i][br] != ' ' && item[i][br] != '\n') s2 += item[i][br++];
+											while (item[i][br] != ' ' && item[i][br] != '\r') s2 += item[i][br++];
 											br++;
-											if (br < item[i].size()) { while (item[i][br] == ' ') br++; if (item[i][br] != '\n') throw "ERROR WITH SPACE - regdir! " + item[i]; }
-											else if (item[i][br - 1] != '\n') throw "ERROR WITH SPACE - regdir! " + item[i];
+											if (br < item[i].size()) { while (item[i][br] == ' ') br++; if (item[i][br] != '\r') throw "ERROR WITH SPACE - regdir! " + item[i]; }
+											else if (item[i][br - 1] != '\r') throw "ERROR WITH SPACE - regdir! " + item[i];
 											if (s2 == "") throw "NO s2 HERE!" + item[i];
 
 											lucky += "001"; //regdir
@@ -1830,7 +1830,7 @@ int main(int argc, char* argv[]) {
 												if (pazi == 1) throw "ERROR! " + item[i];
 												lucky += getReg(s2);
 											}
-											else if (pazi==1 && (s2.size() == 3 || s2.size() == 4)) {
+											else if (pazi == 1 && (s2.size() == 3 || s2.size() == 4)) {
 												lucky[5] = '0';
 												lucky += getRegKRACI(s2);
 											}
@@ -1841,13 +1841,13 @@ int main(int argc, char* argv[]) {
 											br++;
 											if (item[i][br] == '%') {
 												br++;
-												while (item[i][br] != ' ' && item[i][br] != ')'  && item[i][br] != '\n') { s2 += item[i][br]; br++; }
+												while (item[i][br] != ' ' && item[i][br] != ')'  && item[i][br] != '\r') { s2 += item[i][br]; br++; }
 												if (item[i][br] == ' ') throw "ERROR WITH SPACE - regind! " + item[i];
-												if (item[i][br] == '\n') throw "ERROR WITH NEW LINE - regind! " + item[i];
+												if (item[i][br] == '\r') throw "ERROR WITH NEW LINE - regind! " + item[i];
 												else {
 													br++;
 													while (item[i][br] == ' ') br++;
-													if (item[i][br] != '\n') throw "ERROR WITH SPACE - regind! " + item[i];
+													if (item[i][br] != '\r') throw "ERROR WITH SPACE - regind! " + item[i];
 												}
 
 												lucky += "010"; //regind
@@ -1861,11 +1861,11 @@ int main(int argc, char* argv[]) {
 										}
 										// REGINDPOM / MEMDIR
 										else {
-											while (item[i][br] != '(' && item[i][br] != '\n' && item[i][br] != ' ') s3 += item[i][br++];
+											while (item[i][br] != '(' && item[i][br] != '\r' && item[i][br] != ' ') s3 += item[i][br++];
 
 											// MEMDIR
-											if (item[i][br] == ' ' || item[i][br] == '\n') {
-												while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\n') throw "SPACE ERROR - memdir!";
+											if (item[i][br] == ' ' || item[i][br] == '\r') {
+												while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\r') throw "SPACE ERROR - memdir!";
 
 												lucky += "10000000";
 
@@ -1875,15 +1875,15 @@ int main(int argc, char* argv[]) {
 													lucky += decToBinary(0, 2);
 												}
 												else {
-													if (s1 == "INT" && pazi==1 && stoi(s3,nullptr,0) < 128 && stoi(s3,nullptr,0) >0) {
+													if (s1 == "INT" && pazi == 1 && stoi(s3, nullptr, 0) < 128 && stoi(s3, nullptr, 0) > 0) {
 														lucky[5] = '0';
-														lucky += decToBinary(stoi(s3,nullptr,0), 1);
+														lucky += decToBinary(stoi(s3, nullptr, 0), 1);
 													}
-													else if (s1 == "INT" && pazi == 1 && stoi(s3,nullptr,0) >= 128) {
+													else if (s1 == "INT" && pazi == 1 && stoi(s3, nullptr, 0) >= 128) {
 														throw "CAN'T USE SUFIX B AND THIS VALUE! " + item[i];
 													}
-													else if (stoi(s3,nullptr,0) > 32767) throw "OPERAND TOO BIG! " + item[i];
-													else lucky += decToBinary(stoi(s3,nullptr,0), 2);
+													else if (stoi(s3, nullptr, 0) > 32767) throw "OPERAND TOO BIG! " + item[i];
+													else lucky += decToBinary(stoi(s3, nullptr, 0), 2);
 
 												}
 											}
@@ -1897,7 +1897,7 @@ int main(int argc, char* argv[]) {
 
 												if (item[i][br] == '%') {
 													br++;
-													while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\n') s2 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
+													while (item[i][br] != ')') if (item[i][br] != ' ' && item[i][br] != '\r') s2 += item[i][br++]; else throw "CAN'T USE SPACE! " + item[i];
 													if (s2.size() == 2 || s2 == "PSW" || s2 == "psw")
 														lucky += getReg(s2);
 													else throw "NOT GOOD s2 HERE!" + item[i];
@@ -1913,7 +1913,7 @@ int main(int argc, char* argv[]) {
 														poslF->setLinker(-2);
 													}
 												}
-												else lucky += decToBinary(stoi(s3,nullptr,0), 2);
+												else lucky += decToBinary(stoi(s3, nullptr, 0), 2);
 											}
 											else {
 												throw "Unknown ( attempt BRANCH-REGINDPOM )? " + item[i];
@@ -1938,12 +1938,15 @@ int main(int argc, char* argv[]) {
 
 		if (bilo_end == false) throw "NO .end!";
 
+		cout << "C" << endl;
+
 		// PROVERA KRUZNE ZAVISNOSTI I ZAMENA VREDNOSTI ZA EQU!
+
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			string symbol = tek->getSymbol();
 			vector<string> sMain1 = tek->getNizBukvalno();
 			vector<string> sMain2 = tek->getZnaciBukvalno();
-			if (circle(numberr) == true) throw "CIRCLE ERROR!";
+			if (circle() == true) throw "CIRCLE ERROR!";
 			else {
 				for (Equ_Table* tek2 = prviE; tek2 != nullptr; tek2 = tek2->next) {
 					if (tek2 != tek) {
@@ -1981,13 +1984,14 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
+
 		//PROVERA INDEKSA KLASIFIKACIJE I BELEZENJE ZA KOJU SEKCIJU TREBA ICI RELOKACIONI
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			vector<string> s1 = tek->getNizBukvalno();
 			vector<string> s2 = tek->getZnaciBukvalno();
 
 			vector<int> s3;
-			for (int i = 0; i < 50; i++)
+			for (int i = 0; i < 10; i++)
 				s3.push_back(0);
 
 			int vrednost = 0;
@@ -2006,7 +2010,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			bool doublee = false;
-			for (int i = 0; i < 50; i++) {
+			for (int i = 0; i < 10; i++) {
 				if (s3[i] != 0) {
 					if (doublee == false) doublee = true;
 					else throw "ERROR EQU 1!";
@@ -2019,8 +2023,10 @@ int main(int argc, char* argv[]) {
 
 		/* UBACIVANJE VREDNOSTI I RACUNANJE VREDNOSTI SIMBOLA I PRAVLJENJE ZAPISA
 		   indeks_klasifikacije == 0 => simbol je extern => relokacioni ide ka njemu => u kod 0
-		   indeks_klasifikacije == 1 => simbol je global => relokacioni ka sekciji => u kod njegova vrednost 
+		   indeks_klasifikacije == 1 => simbol je global => relokacioni ka sekciji => u kod njegova vrednost
 									 => simbol je local => relokacioni nema uopste */
+
+
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			vector<string> s1 = tek->getNizBukvalno();
 			vector<string> s2 = tek->getZnaciBukvalno();
@@ -2032,7 +2038,7 @@ int main(int argc, char* argv[]) {
 				Symbol_Table* pom = isInSymbol_Table(s1[i]);
 
 				if (regex_match(s1[i], numberr) == false) {
-					
+
 					int v = pom->getValue();
 					int sekcija = pom->getSection();
 
@@ -2055,7 +2061,7 @@ int main(int argc, char* argv[]) {
 			}
 
 			if (tek->getIK() != 0 && tek->getIK() != -1) { //ako nije apsolutan i ako nije extern
-				if(blabla->getlg()!='l')
+				if (blabla->getlg() != 'l')
 					addR(tek->getIK(), ulaz_za_simbol, "direct");
 			}
 			if (tek->getIK() == -1) { blabla->setSection(-5); } //ako je apsolutan, sekcija izmisljena kao znak -5
@@ -2127,7 +2133,7 @@ int main(int argc, char* argv[]) {
 
 				rewriteCode(pom, tek, c);
 
-				if (pom->getlg()=='l' && pom->getSection()!=-5) {
+				if (pom->getlg() == 'l' && pom->getSection() != -5) {
 					if (tek->getLinker() != 0 || tek->getIma_Pomeraj()) {
 						addR(a, tek->getPatch(), "PCrel");
 						poslR->setLinker(tek->getLinker());
@@ -2141,7 +2147,7 @@ int main(int argc, char* argv[]) {
 					}
 				}
 			}
-			else if(pom->getSection() != -5){
+			else if (pom->getSection() != -5) {
 				if (tek->getLinker() != 0 || tek->getIma_Pomeraj()) {
 					addR(pom->getRbr(), tek->getPatch(), "PCrel");
 					poslR->setLinker(tek->getLinker());
@@ -2172,12 +2178,13 @@ int main(int argc, char* argv[]) {
 		outdata << setw(10) << "Number" << setw(10) << "Section" << setw(10) << "L/G" << setw(10) << "Defined"
 			<< setw(10) << "Value" << setw(10) << "Size" << setw(10) << "Name" << setw(10) << "Equ" << setw(10) << endl;
 
+
 		// ISPIS SYMBOL TABLE
 		for (Symbol_Table*tek = prvi; tek != nullptr; tek = tek->next) {
 			if (tek->getlg() == 'l' && tek->getSection() == -5 && tek->getDefined() == false) throw "ERROR! LOCAL AND UNDEFINED! " + tek->getName();
 			outdata << left;
-			outdata << setw(10) << tek->getRbr() << setw(10) << tek->getSection()<< setw(10) << tek->getlg() << setw(10) << tek->getDefined() 
-					<< setw(10) << tek->getValue() << setw(10) << tek->getSize()<< setw(10) << tek->getName() << setw(10) << tek->getEqu()<< setw(10) << endl;
+			outdata << setw(10) << tek->getRbr() << setw(10) << tek->getSection() << setw(10) << tek->getlg() << setw(10) << tek->getDefined()
+				<< setw(10) << tek->getValue() << setw(10) << tek->getSize() << setw(10) << tek->getName() << setw(10) << tek->getEqu() << setw(10) << endl;
 		}
 		outdata << endl;
 
@@ -2186,8 +2193,8 @@ int main(int argc, char* argv[]) {
 
 		// ISPIS RELOCATION TABLE
 		for (Reloc_Table* tek = prviR; tek != nullptr; tek = tek->next) {
-				outdata << left;
-				outdata << setw(10) << tek->getRbr() << setw(20) << tek->getSym() << setw(20) << tek->getAdress() << setw(20) << tek->getWay() << setw(10) << tek->getLinker() << setw(15); if (tek->getSection() == -10) outdata << "EQU"; else outdata << tek->getSection(); outdata<< setw(10) << tek->getSign() << setw(10) << tek->getSize()  << endl;
+			outdata << left;
+			outdata << setw(10) << tek->getRbr() << setw(20) << tek->getSym() << setw(20) << tek->getAdress() << setw(20) << tek->getWay() << setw(10) << tek->getLinker() << setw(15); if (tek->getSection() == -10) outdata << "EQU"; else outdata << tek->getSection(); outdata << setw(10) << tek->getSign() << setw(10) << tek->getSize() << endl;
 		}
 		outdata << endl;
 
@@ -2197,6 +2204,7 @@ int main(int argc, char* argv[]) {
 				outdata << tek->getName() << ": ";
 				for (int i = 0; i < tek->kod.size(); i++) {
 					outdata << tek->kod[i];
+					if (i % 25 == 0 && i != 0) outdata << endl;
 				}
 				outdata << endl;
 			}
@@ -2217,11 +2225,10 @@ int main(int argc, char* argv[]) {
 
 	Simbol koji je EQU, zavistan od lokalnog simbola i globalan -> b:.global a .equ a, 5-b -> ima EQU zapis
 		=> LINKERU, menjaj sekciju kojoj pripada b, nemoj mene pomerati, pusti da se na osnovu te promene i ja promenim.
-		
+
 	Simbol koji je EQU i apsolutan -> sekcija -5
 		=> LINKERU, znaj da sam ja EQU i da sam apsolutan i nemoj da me diras */
 	catch (const char* m) { cout << m << endl; }
 	catch (string m) { cout << m << endl; }
-	system("pause");
 	return 0;
 }

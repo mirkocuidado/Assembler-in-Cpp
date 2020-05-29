@@ -16,7 +16,7 @@ private:
 
 	int indeks_klasifikacije;
 public:
-	Equ_Table* next;
+	Equ_Table* next=nullptr;
 
 	Equ_Table(string s, int br, string* ss, int br2, string * sz) {
 		symbol = s;
