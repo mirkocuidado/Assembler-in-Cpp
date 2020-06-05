@@ -1,18 +1,38 @@
+.section sekcija:
 
-.section proba: 
+.extern ex
+.global gl
 
-labela1: .global labela1
-.skip 50
-labela2: .global labela2
+JMP lc
+JMP gl
+JMP ex
 
-.byte a
+JMP 5
+JMP 500
 
-.equ a, labela1
-PUSH a(%PC)
+JMP *%R1
 
-.equ bb, labela2
-PUSH bb(%PC)
+JMP *(%R1)
 
-.global bb
+JMP *lc(%R1)
+JMP *gl(%R1)
+JMP *ex(%R1)
+
+lc:
+
+JMP *lc(%R7)
+JMP *gl(%R7)
+JMP *ex(%R7)
+
+JMP *5(%R1)
+
+
+gl:
+
+JMP *5
+
+JMP *lc
+JMP *gl
+JMP *ex
 
 .end

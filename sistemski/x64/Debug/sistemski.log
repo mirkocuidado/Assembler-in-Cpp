@@ -1,31 +1,27 @@
 ﻿  Main.cpp
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(11): warning C4067: unexpected tokens following preprocessor directive - expected a newline
 c:\users\hp\desktop\sistemski\sistemski\symbol_table.h(6): warning C4067: unexpected tokens following preprocessor directive - expected a newline
 c:\users\hp\desktop\sistemski\sistemski\for_table.h(3): warning C4067: unexpected tokens following preprocessor directive - expected a newline
 c:\users\hp\desktop\sistemski\sistemski\for_table.h(4): warning C4067: unexpected tokens following preprocessor directive - expected a newline
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(12): warning C4067: unexpected tokens following preprocessor directive - expected a newline
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(13): warning C4067: unexpected tokens following preprocessor directive - expected a newline
 c:\users\hp\desktop\sistemski\sistemski\reloc_table.h(3): warning C4067: unexpected tokens following preprocessor directive - expected a newline
 c:\users\hp\desktop\sistemski\sistemski\reloc_table.h(4): warning C4067: unexpected tokens following preprocessor directive - expected a newline
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(14): warning C4067: unexpected tokens following preprocessor directive - expected a newline
 c:\users\hp\desktop\sistemski\sistemski\equ_table.h(3): warning C4067: unexpected tokens following preprocessor directive - expected a newline
 c:\users\hp\desktop\sistemski\sistemski\equ_table.h(4): warning C4067: unexpected tokens following preprocessor directive - expected a newline
 c:\users\hp\desktop\sistemski\sistemski\equ_table.h(5): warning C4067: unexpected tokens following preprocessor directive - expected a newline
 c:\users\hp\desktop\sistemski\sistemski\equ_table.h(59): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
 c:\users\hp\desktop\sistemski\sistemski\equ_table.h(60): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(295): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(879): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(903): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(929): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(984): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1146): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1167): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1199): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1348): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1473): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1648): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1736): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1765): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
-c:\users\hp\desktop\sistemski\sistemski\main.cpp(1923): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(304): warning C4267: 'initializing': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(887): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(911): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(937): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(992): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1152): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1173): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1205): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1354): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1479): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1654): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1742): warning C4267: 'argument': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1771): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
+c:\users\hp\desktop\sistemski\sistemski\main.cpp(1929): warning C4267: '+=': conversion from 'size_t' to 'int', possible loss of data
 c:\users\hp\desktop\sistemski\sistemski\main.cpp(103): warning C4715: 'decToBinary': not all control paths return a value
   sistemski.vcxproj -> C:\Users\HP\Desktop\sistemski\x64\Debug\sistemski.exe

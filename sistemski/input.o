@@ -1,16 +1,34 @@
+sekcija: 
+2C 00 00 00 2C 00 00 00 2C 00 00 00 2C 00 05 00 2C 00 F4 01 2C 22 2C 42 2C 62 
+00 00 2C 62 00 00 2C 62 00 00 2C 6E 00 00 2C 6E 00 00 2C 6E 00 00 2C 62 05 
+00 2C 80 05 00 2C 80 00 00 2C 80 00 00 2C 80 00 00 
+Section table
+
 Number    Section   L/G       Defined   Value     Size      Name      Equ       
 0         0         l         1         0         0         UND       0         
-1         1         l         1         0         59        proba     0         
-2         1         g         1         0         0         labela1   0         
-3         1         g         1         50        0         labela2   0         
-4         1         l         1         0         0         a         1         
-5         1         g         1         50        0         bb        1         
+1         1         l         1         0         68        sekcija   0         
+2         0         g         0         0         0         ex        0         
+3         1         g         1         52        0         gl        0         
+4         1         l         1         36        0         lc        0         
+
+Relocation table
 
 Number    Section/Symbol      Address/For Symbol  Way                 Linker    For Section    Sign      Size      
-1         1                   5                   direct              0         EQU            +         w         
-2         1                   50                  direct              0         1              +         b         
-3         1                   53                  PCrel               -2        1              +         w         
-4         5                   57                  PCrel               -2        1              +         w         
+1         1                   2                   direct              0         1              +         w         
+2         3                   6                   direct              0         1              +         w         
+3         2                   10                  direct              0         1              +         w         
+4         1                   26                  direct              0         1              +         w         
+5         3                   30                  direct              0         1              +         w         
+6         2                   34                  direct              0         1              +         w         
+7         1                   38                  PCrel               -2        1              +         w         
+8         3                   42                  PCrel               -2        1              +         w         
+9         2                   46                  PCrel               -2        1              +         w         
+10        1                   58                  direct              0         1              +         w         
+11        3                   62                  direct              0         1              +         w         
+12        2                   66                  direct              0         1              +         w         
 
-proba: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 4C 6E 00 00 4C 6E 00 00 
+sekcija: 
+2C 00 24 00 2C 00 00 00 2C 00 00 00 2C 00 05 00 2C 00 F4 01 2C 22 2C 42 2C 62 
+24 00 2C 62 00 00 2C 62 00 00 2C 6E 24 00 2C 6E 00 00 2C 6E 00 00 2C 62 05 
+00 2C 80 05 00 2C 80 24 00 2C 80 00 00 2C 80 00 00 
 

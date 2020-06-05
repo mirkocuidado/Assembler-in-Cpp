@@ -221,7 +221,7 @@ bool circle() {
 void rewriteCode(Symbol_Table* pom, For_Table* tek, Symbol_Table* c) {
 	char vel = tek->getSize();
 	if (vel == 'b') {
-		if (pom->getValue() > 127 || pom->getValue() < -129) throw "Byte forward table element with size of Word. ";
+		if (pom->getValue() > 255 || pom->getValue() < -255) throw "Byte forward table element with size of Word. ";
 		string s = decToBinary(pom->getValue(), 1);
 		s = binary_hexa(s);
 		c->changeCode(tek->getPatch(), s);
@@ -256,12 +256,20 @@ int main(int argc, char* argv[]) {
 
 		if (argc != 4) throw "Not enough parameters!";
 
+		regex legit_input("^[a-zA-Z0-9_]+\\.s$");
+		regex legit_output("^[a-zA-Z0-9_]+\\.o$");
+
 		string o = argv[1];
 		if (o != "-o") throw "Write -o in your command line call as a second argument!";
 
-		cout << argv[argc - 1] << endl;
+		string input = argv[argc - 1];
+		cout << input << endl;
+		if (!regex_match(input, legit_input)) { throw "Input file must end with .s! "; }
+
+		string output = argv[2];
+		if (!regex_match(output, legit_output)) { throw "Output file must end with .o! "; }
+
 		ifstream inFile;
-		//inFile.open(argv[argc-1]);
 		inFile.open("test.txt");
 		if (inFile.fail()) {
 			throw "FILE ERROR! ";
@@ -489,7 +497,7 @@ int main(int argc, char* argv[]) {
 									ima_param = true;
 									if (regex_match(s1, numberr)) {
 										if (s1.size() > 4 && s1[0] == '0' && s1[1] == 'x') throw "ERROR WITH HEXA! " + item[i];
-										if (stoi(s1, nullptr, 0) < -129 || stoi(s1, nullptr, 0) > 127) throw "ERROR OF SIZE FOR BYTE!";
+										if (stoi(s1, nullptr, 0) < -255 || stoi(s1, nullptr, 0) > 255) throw "ERROR OF SIZE FOR BYTE!";
 										else {
 											string s = decToBinary(stoi(s1, nullptr, 0), 1);
 											codeC += binary_hexa(s);
@@ -549,7 +557,7 @@ int main(int argc, char* argv[]) {
 									ima_param = true;
 									if (regex_match(s1, numberr)) {
 										if (s1.size() > 6 && s1[0] == '0' && s1[1] == 'x') throw "ERROR WITH HEXA! " + item[i];
-										if (stoi(s1, nullptr, 0) < -32769 || stoi(s1, nullptr, 0) > 32767) throw "ERROR OF SIZE FOR WORD!";
+										if (stoi(s1, nullptr, 0) < -65536 || stoi(s1, nullptr, 0) > 65535) throw "ERROR OF SIZE FOR WORD!";
 										string s = decToBinary(stoi(s1, nullptr, 0), 2);
 										codeC += binary_hexa(s);
 									}
@@ -748,7 +756,7 @@ int main(int argc, char* argv[]) {
 							int flag = 0;
 
 							for (int i = 0; i < nizI; i++) {
-								if (regex_match(niz[i], numberr)) izraz += stoi(niz[i]);
+								if (regex_match(niz[i], numberr)) izraz += stoi(niz[i], nullptr, 0);
 								else {
 									flag = 1;
 									Symbol_Table* pompom = isInSymbol_Table(niz[i]);
@@ -862,7 +870,7 @@ int main(int argc, char* argv[]) {
 									else lucky += "0"; // za b ili nista je size=0, pa ako bude >255, menja se
 
 									if (regex_match(s2, numberr)) {
-										if (stoi(s2, nullptr, 0) > 32767 || stoi(s2, nullptr, 0) < -32768) throw "OPERAND TOO BIG! " + item[i];
+										if (stoi(s2, nullptr, 0) > 65535 || stoi(s2, nullptr, 0) < -65535) throw "OPERAND TOO BIG! " + item[i];
 
 										lucky += "0000000000";
 										lucky += decToBinary(stoi(s2, nullptr, 0), 2);
@@ -937,7 +945,7 @@ int main(int argc, char* argv[]) {
 									if (item[i][br] == ' ' || item[i][br] == '\r') {
 										while (item[i][br] == ' ' && item[i][br] == '\t') br++; if (item[i][br] != '\r') throw "SPACE ERROR - memdir!";
 
-										if (regex_match(s4, numberr) == false && s4[0] != '0' && s4[1] != 'x')
+										if (regex_match(s4, numberr) == false)
 											process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 2);
 
 										lucky += "100";
@@ -951,7 +959,7 @@ int main(int argc, char* argv[]) {
 									else if (item[i][br] == '(') {
 										br++;
 
-										if (regex_match(s4, numberr) == false && s4[0] != '0' && s4[1] != 'x')
+										if (regex_match(s4, numberr) == false)
 											process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 2);
 
 										lucky += "100011";
@@ -1029,14 +1037,14 @@ int main(int argc, char* argv[]) {
 										else lucky += "0";
 
 										if (regex_match(s2, numberr)) {
-											if (stoi(s2, nullptr, 0) < 128 && stoi(s2, nullptr, 0) > -129) {
+											if (stoi(s2, nullptr, 0) < 255 && stoi(s2, nullptr, 0) > -255) {
 												lucky += "0000000000";
 												if (pazi == 0) lucky += "";
 												else if (pazi == 1) lucky += decToBinary(stoi(s2, nullptr, 0), 1);
 												else if (pazi == 2) lucky += decToBinary(stoi(s2, nullptr, 0), 2);
 											}
 											else {
-												if (stoi(s2, nullptr, 0) > 32767 || stoi(s2, nullptr, 0) < -32768) throw "OPERAND TOO BIG! " + item[i];
+												if (stoi(s2, nullptr, 0) > 65535 || stoi(s2, nullptr, 0) < -65535) throw "OPERAND TOO BIG! " + item[i];
 												if (pazi == 1) throw "Instruction with sufix B and >255 number ERROR!" + item[i];
 												lucky[5] = '1';
 												lucky += "0000000000";
@@ -1076,7 +1084,7 @@ int main(int argc, char* argv[]) {
 												if (pazi == 1) throw "CAN'T USE B SUFIX AND WHOLE REGISTER! " + item[i];
 
 												if (regex_match(s2, numberr)) {
-													if (pazi == 0 && stoi(s2, nullptr, 0) < 128 && stoi(s2, nullptr, 0) > -129)
+													if (pazi == 0 && stoi(s2, nullptr, 0) < 255 && stoi(s2, nullptr, 0) > -255)
 														lucky += decToBinary(stoi(s2, nullptr, 0), 2);
 												}
 
@@ -1087,7 +1095,7 @@ int main(int argc, char* argv[]) {
 												lucky[5] = '0';
 												if (pazi == 2) throw "Instruction with sufix W and h/l ERROR!" + item[i]; // ne sme MOVW sa high.low
 												if (regex_match(s2, numberr)) {
-													if (stoi(s2, nullptr, 0) < -128 || stoi(s2, nullptr, 0) > 127) throw "h/l and too big number ERROR!" + item[i]; // ne sme npr. MOV $1000, %R1 high/low
+													if (stoi(s2, nullptr, 0) < -256 || stoi(s2, nullptr, 0) > 255) throw "h/l and too big number ERROR!" + item[i]; // ne sme npr. MOV $1000, %R1 high/low
 													if (pazi == 0) lucky += decToBinary(stoi(s2, nullptr, 0), 1);
 												}
 												else throw "Address is 16b and here you have high/low" + item[i];
@@ -1105,10 +1113,8 @@ int main(int argc, char* argv[]) {
 											br++;
 
 											if (pazi == 0 && regex_match(s2, numberr)) {
-												if (stoi(s2, nullptr, 0) < 128 && stoi(s2, nullptr, 0) > -129) { lucky += decToBinary(stoi(s2, nullptr, 0), 1); lucky[5] = '0'; }
-												else {
-													lucky += decToBinary(stoi(s2, nullptr, 0), 2); lucky[5] = '1';
-												}
+												if (stoi(s2, nullptr, 0) < 255 && stoi(s2, nullptr, 0) > -255) { lucky += decToBinary(stoi(s2, nullptr, 0), 1); lucky[5] = '0'; }
+												
 											}
 
 											lucky += "010";
@@ -1137,7 +1143,7 @@ int main(int argc, char* argv[]) {
 											if (item[i][br] == ' ' || item[i][br] == '\r') {
 
 												if (pazi == 0 && regex_match(s2, numberr)) {
-													if (stoi(s2, nullptr, 0) < 128 && stoi(s2, nullptr, 0) > -129) { lucky += decToBinary(stoi(s2, nullptr, 0), 1); lucky[5] = '0'; }
+													if (stoi(s2, nullptr, 0) < 255 && stoi(s2, nullptr, 0) > -255) { lucky += decToBinary(stoi(s2, nullptr, 0), 1); lucky[5] = '0'; }
 												}
 
 												while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] != '\r') throw "SPACE ERROR - memdir!";
@@ -1158,7 +1164,7 @@ int main(int argc, char* argv[]) {
 											else if (item[i][br] == '(') {
 
 												if (pazi == 0 && regex_match(s2, numberr)) {
-													if (stoi(s2, nullptr, 0) < 128 && stoi(s2, nullptr, 0) > -129) { lucky += decToBinary(stoi(s2, nullptr, 0), 1); lucky[5] = '0'; }
+													if (stoi(s2, nullptr, 0) < 255 && stoi(s2, nullptr, 0) > -255) { lucky += decToBinary(stoi(s2, nullptr, 0), 1); lucky[5] = '0'; }
 												}
 
 												br++;
@@ -1794,11 +1800,11 @@ int main(int argc, char* argv[]) {
 										lucky += "00000000"; // 2. bajt
 
 										if (regex_match(s2, numberr)) {
-											if (s1 == "INT" && pazi == 1 && (stoi(s2, nullptr, 0) < 128 && stoi(s2, nullptr, 0) >= 0)) { lucky[5] = '0'; lucky += decToBinary(stoi(s2, nullptr, 0), 1); }
-											else if (s1 == "INT" && pazi == 1 && (stoi(s2, nullptr, 0) > 128 || stoi(s2, nullptr, 0) < 0)) throw "CAN'T USE SUFIX b HERE!";
+											if (s1 == "INT" && pazi == 1 && (stoi(s2, nullptr, 0) < 255 && stoi(s2, nullptr, 0) >= 0)) { lucky[5] = '0'; lucky += decToBinary(stoi(s2, nullptr, 0), 1); }
+											else if (s1 == "INT" && pazi == 1 && (stoi(s2, nullptr, 0) > 255 || stoi(s2, nullptr, 0) < 0)) throw "CAN'T USE SUFIX b HERE!";
 
 											if (stoi(s2, nullptr, 0) > 0 && pazi != 1) {
-												if (stoi(s2, nullptr, 0) < 32767)
+												if (stoi(s2, nullptr, 0) < 65535)
 													lucky += decToBinary(stoi(s2, nullptr, 0), 2);
 												else throw "OPERAND TOO BIG! " + item[i];
 											}
@@ -1852,7 +1858,7 @@ int main(int argc, char* argv[]) {
 
 												lucky += "010"; //regind
 
-												if (pazi != 2) lucky[5] = '0'; // za INT
+												if (pazi != 2 && s1=="INT") lucky[5] = '0'; // za INT 
 
 												if (s2.size() == 2 || s2 == "PSW" || s2 == "psw") lucky += getReg(s2);
 												else throw "ILLEGAL REGISTER! " + item[i];
@@ -1870,19 +1876,19 @@ int main(int argc, char* argv[]) {
 												lucky += "10000000";
 
 												if (regex_match(s3, numberr) == false) {
-													process_move(s3, LC, BROJ_SEKCIJE, SEKCIJA, 3);
+													process_move(s3, LC, BROJ_SEKCIJE, SEKCIJA, 2);
 													poslF->setSkok();
 													lucky += decToBinary(0, 2);
 												}
 												else {
-													if (s1 == "INT" && pazi == 1 && stoi(s3, nullptr, 0) < 128 && stoi(s3, nullptr, 0) > 0) {
+													if (s1 == "INT" && pazi == 1 && stoi(s3, nullptr, 0) < 255 && stoi(s3, nullptr, 0) > 0) {
 														lucky[5] = '0';
 														lucky += decToBinary(stoi(s3, nullptr, 0), 1);
 													}
-													else if (s1 == "INT" && pazi == 1 && stoi(s3, nullptr, 0) >= 128) {
+													else if (s1 == "INT" && pazi == 1 && stoi(s3, nullptr, 0) >= 255) {
 														throw "CAN'T USE SUFIX B AND THIS VALUE! " + item[i];
 													}
-													else if (stoi(s3, nullptr, 0) > 32767) throw "OPERAND TOO BIG! " + item[i];
+													else if (stoi(s3, nullptr, 0) > 65535) throw "OPERAND TOO BIG! " + item[i];
 													else lucky += decToBinary(stoi(s3, nullptr, 0), 2);
 
 												}
@@ -1941,7 +1947,7 @@ int main(int argc, char* argv[]) {
 		cout << "C" << endl;
 
 		// PROVERA KRUZNE ZAVISNOSTI I ZAMENA VREDNOSTI ZA EQU!
-
+		cout << endl;
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			string symbol = tek->getSymbol();
 			vector<string> sMain1 = tek->getNizBukvalno();
@@ -1950,6 +1956,7 @@ int main(int argc, char* argv[]) {
 			else {
 				for (Equ_Table* tek2 = prviE; tek2 != nullptr; tek2 = tek2->next) {
 					if (tek2 != tek) {
+						string sssss = tek2->getSymbol();
 						vector<string> s1 = tek2->getNizBukvalno();
 						vector<string> s2 = tek2->getZnaciBukvalno();
 
@@ -1960,8 +1967,10 @@ int main(int argc, char* argv[]) {
 
 								tek2->loseSymbol(i);
 								tek2->loseZnak(i);
-
+								s1.erase(s1.begin() + i);
+								s2.erase(s2.begin() + i);
 								for (int j = 0; j < sMain1.size(); j++) {
+									cout << tek2->getNiz();
 									tek2->setSymbol(sMain1[j], i);
 
 									if (sMain2[j] == "+") {
@@ -1979,6 +1988,11 @@ int main(int argc, char* argv[]) {
 								}
 							}
 						}
+						for (Equ_Table* tekkk = prviE; tekkk != nullptr; tekkk = tekkk->next) {
+							cout << tekkk->getSymbol() << " " << tekkk->getNiz() << " " << tekkk->getZnaci() << endl;
+						}
+
+						cout << endl;
 					}
 				}
 			}
@@ -1991,7 +2005,7 @@ int main(int argc, char* argv[]) {
 			vector<string> s2 = tek->getZnaciBukvalno();
 
 			vector<int> s3;
-			for (int i = 0; i < 10; i++)
+			for (int i = 0; i < 50; i++)
 				s3.push_back(0);
 
 			int vrednost = 0;
@@ -2003,14 +2017,17 @@ int main(int argc, char* argv[]) {
 						s3[0] += 1;
 					}
 					else {
-						if (s2[i] == "-") s3[pom->getSection()] -= 1;
-						else s3[pom->getSection()] += 1;
+						if (pom->getSection() == -5) {}
+						else {
+							if (s2[i] == "-") s3[pom->getSection()] -= 1;
+							else s3[pom->getSection()] += 1;
+						}
 					}
 				}
 			}
 
 			bool doublee = false;
-			for (int i = 0; i < 10; i++) {
+			for (int i = 0; i < 50; i++) {
 				if (s3[i] != 0) {
 					if (doublee == false) doublee = true;
 					else throw "ERROR EQU 1!";
@@ -2021,12 +2038,12 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
+
+
 		/* UBACIVANJE VREDNOSTI I RACUNANJE VREDNOSTI SIMBOLA I PRAVLJENJE ZAPISA
 		   indeks_klasifikacije == 0 => simbol je extern => relokacioni ide ka njemu => u kod 0
 		   indeks_klasifikacije == 1 => simbol je global => relokacioni ka sekciji => u kod njegova vrednost
 									 => simbol je local => relokacioni nema uopste */
-
-
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			vector<string> s1 = tek->getNizBukvalno();
 			vector<string> s2 = tek->getZnaciBukvalno();
@@ -2076,6 +2093,24 @@ int main(int argc, char* argv[]) {
 			Symbol_Table* pom = isInSymbol_Table(globalni[i]);
 			if (pom->getDefined() == false)
 				throw "ERROR! CAN'T BE LIKE THIS! GLOBAL AND NOT DEFINED!";
+		}
+
+		ofstream outdata;
+		outdata.open(argv[2]); // opens the file
+		if (!outdata) { // file couldn't be opened
+			cerr << "Error: file could not be opened" << endl;
+			exit(1);
+		}
+
+		for (Symbol_Table*tek = prvi; tek != nullptr; tek = tek->next) {
+			if (tek->getSize() != 0) {
+				outdata << tek->getName() << ": " << endl;
+				for (int i = 0; i < tek->kod.size(); i++) {
+					outdata << tek->kod[i];
+					if (i % 25 == 0 && i != 0) outdata << endl;
+				}
+				outdata << endl;
+			}
 		}
 
 		// RAZRESAVANJE TABELE OBRACANJA UNAPRED!
@@ -2167,12 +2202,11 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		ofstream outdata;
-		outdata.open(argv[2]); // opens the file
-		if (!outdata) { // file couldn't be opened
-			cerr << "Error: file could not be opened" << endl;
-			exit(1);
-		}
+		
+		
+
+		outdata << "Section table" << endl;
+		outdata << endl;
 
 		outdata << left;
 		outdata << setw(10) << "Number" << setw(10) << "Section" << setw(10) << "L/G" << setw(10) << "Defined"
@@ -2188,6 +2222,9 @@ int main(int argc, char* argv[]) {
 		}
 		outdata << endl;
 
+		outdata << "Relocation table" << endl;
+		outdata << endl;
+
 		outdata << left;
 		outdata << setw(10) << "Number" << setw(20) << "Section/Symbol" << setw(20) << "Address/For Symbol" << setw(20) << "Way" << setw(10) << "Linker" << setw(15) << "For Section" << setw(10) << "Sign" << setw(10) << "Size" << endl;
 
@@ -2201,7 +2238,7 @@ int main(int argc, char* argv[]) {
 		// ISPIS CODE-ova
 		for (Symbol_Table*tek = prvi; tek != nullptr; tek = tek->next) {
 			if (tek->getSize() != 0) {
-				outdata << tek->getName() << ": ";
+				outdata << tek->getName() << ": " << endl;
 				for (int i = 0; i < tek->kod.size(); i++) {
 					outdata << tek->kod[i];
 					if (i % 25 == 0 && i != 0) outdata << endl;
@@ -2230,5 +2267,7 @@ int main(int argc, char* argv[]) {
 		=> LINKERU, znaj da sam ja EQU i da sam apsolutan i nemoj da me diras */
 	catch (const char* m) { cout << m << endl; }
 	catch (string m) { cout << m << endl; }
+	int a;
+	cin >> a;
 	return 0;
 }
