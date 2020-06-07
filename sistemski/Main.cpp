@@ -254,7 +254,7 @@ int main(int argc, char* argv[]) {
 
 	try {
 
-		if (argc != 4) throw "Not enough parameters!";
+		/*if (argc != 4) throw "Not enough parameters!";
 
 		regex legit_input("^[a-zA-Z0-9_]+\\.s$");
 		regex legit_output("^[a-zA-Z0-9_]+\\.o$");
@@ -267,7 +267,7 @@ int main(int argc, char* argv[]) {
 		if (!regex_match(input, legit_input)) { throw "Input file must end with .s! "; }
 
 		string output = argv[2];
-		if (!regex_match(output, legit_output)) { throw "Output file must end with .o! "; }
+		if (!regex_match(output, legit_output)) { throw "Output file must end with .o! "; }*/
 
 		ifstream inFile;
 		inFile.open("test.txt");
@@ -294,10 +294,12 @@ int main(int argc, char* argv[]) {
 		string znak[50];
 		int nizI = 0;
 		int nizZ = 0;
+		int valzi = 0;
 
 		regex numberr("^(\\+|-)?[0-9]+|(\\+|-)?(0x|0X)[0-9A-Fa-f]{2}|(\\+|-)?(0x|0X)[0-9A-Fa-f]{4}$");
 
 		while (getline(inFile, pom)) {
+			valzi = 0;
 			if (pom != "") item.push_back(pom);
 			else continue;
 
@@ -706,13 +708,17 @@ int main(int argc, char* argv[]) {
 							string s1 = "";
 
 							while (item[i][br] != ',') {
-								if (item[i][br] != ' ')
-									s1 += item[i][br];
+								if (item[i][br] != ' ') {
+									if (item[i][br] == '\r') throw "EQU error! " + item[i];
+									else s1 += item[i][br];
+								}
+								else throw "EQU with no coma! " + item[i];
 								br++;
 							}
 
 							br++; // preskoci ','
 							while (item[i][br] == ' ') br++;
+							if (item[i][br] == '\r')  throw "EQU error!";
 
 							Symbol_Table* pom = isInSymbol_Table(s1);
 							if (pom != nullptr && pom->getDefined() == true) throw ".equ ERROR " + item[i];
@@ -812,12 +818,14 @@ int main(int argc, char* argv[]) {
 						string s5 = "";
 						int pazi = 0;
 
-						while (item[i][br] != ' ') s1 += item[i][br++];
+						while (item[i][br] != ' ' && item[i][br] != '\r') s1 += item[i][br++];
 						while (item[i][br] == ' ') br++;
 
 						if (s1 == "HALT") {
 							LC++;
 							codeC += "00";
+
+							valzi = 1;
 
 							while (item[i][br] == ' ' || item[i][br] == '\t') br++;
 							if (item[i][br] == '\r') continue; else throw "ERROR WITH OPERANDS! " + item[i];
@@ -825,13 +833,13 @@ int main(int argc, char* argv[]) {
 						else if (s1 == "IRET") {
 							LC++;
 							codeC += "08";
-
+							valzi = 1;
 							while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] == '\r') continue; else throw "ERROR WITH OPERANDS! " + item[i];
 						}
 						else if (s1 == "RET") {
 							LC++;
 							codeC += "10";
-
+							valzi = 1;
 							while (item[i][br] == ' ' || item[i][br] == '\t') br++; if (item[i][br] == '\r') continue; else throw "ERROR WITH OPERANDS! " + item[i];
 						}
 						else {
@@ -1114,7 +1122,7 @@ int main(int argc, char* argv[]) {
 
 											if (pazi == 0 && regex_match(s2, numberr)) {
 												if (stoi(s2, nullptr, 0) < 255 && stoi(s2, nullptr, 0) > -255) { lucky += decToBinary(stoi(s2, nullptr, 0), 1); lucky[5] = '0'; }
-												
+
 											}
 
 											lucky += "010";
@@ -1858,7 +1866,7 @@ int main(int argc, char* argv[]) {
 
 												lucky += "010"; //regind
 
-												if (pazi != 2 && s1=="INT") lucky[5] = '0'; // za INT 
+												if (pazi != 2 && s1 == "INT") lucky[5] = '0'; // za INT
 
 												if (s2.size() == 2 || s2 == "PSW" || s2 == "psw") lucky += getReg(s2);
 												else throw "ILLEGAL REGISTER! " + item[i];
@@ -1931,7 +1939,8 @@ int main(int argc, char* argv[]) {
 								}
 								// ERROR
 								else {
-									throw "ERROR unknown opcode! " + item[i];
+									if (valzi == 0)
+										throw "ERROR unknown opcode! " + item[i];
 								}
 							}
 						}
@@ -1944,10 +1953,8 @@ int main(int argc, char* argv[]) {
 
 		if (bilo_end == false) throw "NO .end!";
 
-		cout << "C" << endl;
-
 		// PROVERA KRUZNE ZAVISNOSTI I ZAMENA VREDNOSTI ZA EQU!
-		cout << endl;
+
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			string symbol = tek->getSymbol();
 			vector<string> sMain1 = tek->getNizBukvalno();
@@ -1956,7 +1963,6 @@ int main(int argc, char* argv[]) {
 			else {
 				for (Equ_Table* tek2 = prviE; tek2 != nullptr; tek2 = tek2->next) {
 					if (tek2 != tek) {
-						string sssss = tek2->getSymbol();
 						vector<string> s1 = tek2->getNizBukvalno();
 						vector<string> s2 = tek2->getZnaciBukvalno();
 
@@ -1969,8 +1975,8 @@ int main(int argc, char* argv[]) {
 								tek2->loseZnak(i);
 								s1.erase(s1.begin() + i);
 								s2.erase(s2.begin() + i);
+
 								for (int j = 0; j < sMain1.size(); j++) {
-									cout << tek2->getNiz();
 									tek2->setSymbol(sMain1[j], i);
 
 									if (sMain2[j] == "+") {
@@ -1988,11 +1994,6 @@ int main(int argc, char* argv[]) {
 								}
 							}
 						}
-						for (Equ_Table* tekkk = prviE; tekkk != nullptr; tekkk = tekkk->next) {
-							cout << tekkk->getSymbol() << " " << tekkk->getNiz() << " " << tekkk->getZnaci() << endl;
-						}
-
-						cout << endl;
 					}
 				}
 			}
@@ -2017,8 +2018,7 @@ int main(int argc, char* argv[]) {
 						s3[0] += 1;
 					}
 					else {
-						if (pom->getSection() == -5) {}
-						else {
+						if (pom->getSection() != -5) {
 							if (s2[i] == "-") s3[pom->getSection()] -= 1;
 							else s3[pom->getSection()] += 1;
 						}
@@ -2030,20 +2030,20 @@ int main(int argc, char* argv[]) {
 			for (int i = 0; i < 50; i++) {
 				if (s3[i] != 0) {
 					if (doublee == false) doublee = true;
-					else throw "ERROR EQU 1!";
+					else throw "ERROR EQU INDEX CLASSIFICATION! " + tek->getSymbol();
 
 					tek->setIK(i);
 				}
-				if (s3[i] != 1 && s3[i] != 0) throw "ERROR EQU 2!"; // mozda bolje na kraju
+				if (s3[i] != 1 && s3[i] != 0) throw "ERROR EQU INDEX CLASSIFICATION! " + tek->getSymbol(); // mozda bolje na kraju
 			}
 		}
-
-
 
 		/* UBACIVANJE VREDNOSTI I RACUNANJE VREDNOSTI SIMBOLA I PRAVLJENJE ZAPISA
 		   indeks_klasifikacije == 0 => simbol je extern => relokacioni ide ka njemu => u kod 0
 		   indeks_klasifikacije == 1 => simbol je global => relokacioni ka sekciji => u kod njegova vrednost
 									 => simbol je local => relokacioni nema uopste */
+
+
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			vector<string> s1 = tek->getNizBukvalno();
 			vector<string> s2 = tek->getZnaciBukvalno();
@@ -2093,24 +2093,6 @@ int main(int argc, char* argv[]) {
 			Symbol_Table* pom = isInSymbol_Table(globalni[i]);
 			if (pom->getDefined() == false)
 				throw "ERROR! CAN'T BE LIKE THIS! GLOBAL AND NOT DEFINED!";
-		}
-
-		ofstream outdata;
-		outdata.open(argv[2]); // opens the file
-		if (!outdata) { // file couldn't be opened
-			cerr << "Error: file could not be opened" << endl;
-			exit(1);
-		}
-
-		for (Symbol_Table*tek = prvi; tek != nullptr; tek = tek->next) {
-			if (tek->getSize() != 0) {
-				outdata << tek->getName() << ": " << endl;
-				for (int i = 0; i < tek->kod.size(); i++) {
-					outdata << tek->kod[i];
-					if (i % 25 == 0 && i != 0) outdata << endl;
-				}
-				outdata << endl;
-			}
 		}
 
 		// RAZRESAVANJE TABELE OBRACANJA UNAPRED!
@@ -2195,15 +2177,19 @@ int main(int argc, char* argv[]) {
 					poslR->setSize(tek->getSize());
 				}
 			}
-			else if (pom->getlg() == 'g') { // PROVERI DA LI OVO TREBA
+			else if (pom->getlg() == 'g') {
 				addR(pom->getRbr(), tek->getPatch(), "direct");
 				poslR->setSection(tek->getSectionNumber());
 				poslR->setSize(tek->getSize());
 			}
 		}
 
-		
-		
+		ofstream outdata;
+		outdata.open(argv[2]); // opens the file
+		if (!outdata) { // file couldn't be opened
+			cerr << "Error: file could not be opened" << endl;
+			exit(1);
+		}
 
 		outdata << "Section table" << endl;
 		outdata << endl;
@@ -2251,23 +2237,8 @@ int main(int argc, char* argv[]) {
 		outdata.close();
 		inFile.close();
 	}
-	/*Simbol koji je EQU, zavistan od extern simbola i globalan -> .extern b .global a .equ a, 5-b -> ide direct zapis
-		=> LINKERU, menjaj b, nemoj mene pomerati, pusti da se na osnovu te promene i ja promenim.
 
-	Simbol koji je EQU, zavistan od extern simbola i lokalan -> .extern b .equ a, 5-b -> nema EQU zapisa
-		=> a je lokalni simbol i njegova vrednost linkeru nista ne znaci => ne treba je azurirati
-
-	Simbol koji je EQU, zavistan od lokalnog simbola i lokalan -> b: .equ a, 5-b -> nema EQU zapisa
-		=> a je lokalni simbol i njegova vrednost linkeru nista ne znaci => ne treba je azurirati
-
-	Simbol koji je EQU, zavistan od lokalnog simbola i globalan -> b:.global a .equ a, 5-b -> ima EQU zapis
-		=> LINKERU, menjaj sekciju kojoj pripada b, nemoj mene pomerati, pusti da se na osnovu te promene i ja promenim.
-
-	Simbol koji je EQU i apsolutan -> sekcija -5
-		=> LINKERU, znaj da sam ja EQU i da sam apsolutan i nemoj da me diras */
 	catch (const char* m) { cout << m << endl; }
 	catch (string m) { cout << m << endl; }
-	int a;
-	cin >> a;
 	return 0;
 }
