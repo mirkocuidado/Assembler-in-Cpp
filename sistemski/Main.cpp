@@ -512,7 +512,10 @@ int main(int argc, char* argv[]) {
 											if (pomm->getDefined() == true && pomm->getlg() == 'g') {
 												addR(pomm->getRbr(), LC, "direct"); poslR->setSize('b'); poslR->setSection(BROJ_SEKCIJE);
 											}
-											else if (pomm->getlg() == 'l') addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'b');
+											else {
+												if (pomm->getlg() == 'g') { addR(pomm->getRbr(), LC, "direct"); poslR->setSize('b'); poslR->setSection(BROJ_SEKCIJE); }
+												else if (pomm->getlg() == 'l') addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'b');
+											}
 										}
 										else {
 											add(s1, -5, 'l', false, 0, 0);
@@ -568,6 +571,7 @@ int main(int argc, char* argv[]) {
 										codeC += "0000";
 										if (pomm != nullptr) {
 											if (pomm->getDefined() == true && pomm->getlg() == 'g') addR(pomm->getRbr(), LC, "direct");
+											if (pomm->getlg() == 'g') { addR(pomm->getRbr(), LC, "direct"); poslR->setSize('w'); poslR->setSection(BROJ_SEKCIJE); }
 											else if (pomm->getlg() == 'l') addF(LC, s1, BROJ_SEKCIJE, SEKCIJA, 'w');
 										}
 										else {
@@ -1344,7 +1348,7 @@ int main(int argc, char* argv[]) {
 												if (pazi == 0 && s2.size() == 2) lucky[5] = '1';
 
 												if (regex_match(s4, numberr)) {
-													lucky += decToBinary(stoi(s4), 2);
+													lucky += decToBinary(stoi(s4,nullptr, 0), 2);
 												}
 												else {
 													if (s3 == "PC" || s3 == "pc" || s3 == "r7" || s3 == "R7") {
@@ -1470,7 +1474,7 @@ int main(int argc, char* argv[]) {
 												else throw "MUST BE WITHOUT SPACE! " + item[i];
 
 												if (regex_match(s4, numberr)) {
-													lucky += decToBinary(stoi(s4), 2);
+													lucky += decToBinary(stoi(s4,nullptr,0), 2);
 												}
 												else {
 													if (s3 == "PC" || s3 == "pc" || s3 == "r7" || s3 == "R7") {
@@ -1521,7 +1525,7 @@ int main(int argc, char* argv[]) {
 											int SPECIJALNI_FLAG = 0;
 											if (s2 == "PC" || s2 == "pc" || s2 == "R7" || s2 == "r7") SPECIJALNI_FLAG = 1;
 
-											if (regex_match(s2, numberr)) {
+											if (regex_match(s4, numberr)) {
 												lucky += decToBinary(stoi(s4, nullptr, 0), 2);
 											}
 											else {
@@ -1944,7 +1948,7 @@ int main(int argc, char* argv[]) {
 								}
 							}
 						}
-						cout << lucky << " " << lucky.size() << endl;
+						cout << lucky << " " << lucky.size() << " " << item[i] << endl;
 						cout << LC << endl;
 					}
 				}
@@ -1998,8 +2002,6 @@ int main(int argc, char* argv[]) {
 				}
 			}
 		}
-
-
 		//PROVERA INDEKSA KLASIFIKACIJE I BELEZENJE ZA KOJU SEKCIJU TREBA ICI RELOKACIONI
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			vector<string> s1 = tek->getNizBukvalno();
@@ -2050,12 +2052,15 @@ int main(int argc, char* argv[]) {
 			Symbol_Table* blabla = isInSymbol_Table(tek->getSymbol());
 			int ulaz_za_simbol = blabla->getRbr();
 
+			int flagZaMinus5 = 0;
+
 			int vrednost = 0;
 			for (int i = 0; i < s1.size(); i++) {
 				Symbol_Table* pom = isInSymbol_Table(s1[i]);
 
 				if (regex_match(s1[i], numberr) == false) {
 
+					flagZaMinus5 = 1;
 					int v = pom->getValue();
 					int sekcija = pom->getSection();
 
@@ -2071,11 +2076,13 @@ int main(int argc, char* argv[]) {
 					}
 				}
 				else {
-					int v = stoi(s1[i]);
+					int v = stoi(s1[i], nullptr, 0);
 					if (s2[i] == "-") vrednost -= v;
 					else vrednost += v;
 				}
 			}
+
+			if (flagZaMinus5 == 0) { blabla->setSection(-5); }
 
 			if (tek->getIK() != 0 && tek->getIK() != -1) { //ako nije apsolutan i ako nije extern
 				if (blabla->getlg() != 'l')
@@ -2240,5 +2247,6 @@ int main(int argc, char* argv[]) {
 
 	catch (const char* m) { cout << m << endl; }
 	catch (string m) { cout << m << endl; }
+	int c; cin >> c;
 	return 0;
 }

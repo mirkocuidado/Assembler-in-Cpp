@@ -1,124 +1,50 @@
-.section sekcija:
+.extern printf
+   .extern scanf
+   .extern exit
+   .global main
 
+   .extern ucitajListu
+   .extern oslobodi
+   .extern obrada
 
-MOV $5, %R1
-MOV $2000, %R1
-MOVW $5, %R1
-MOVW $2000, %R1
-MOV $5, %R1h
-MOVB $5, %R1h
+.section text:
+main:
 
-MOV $5, (%R1)
-MOV $2000, (%R1)
-MOVB $5, (%R1)
-MOVW $5, (%R1)
-MOVW $2000, (%R1)
+     PUSH %R4
 
-MOV $5, 5(%R1)
-MOV $2000, 5(%R1)
-MOVB $5, 5(%R1)
-MOVW $5, 5(%R1)
-MOVW $2000, 5(%R1)
+     MOV %R0, ispis
+     JMP printf
 
-ADD %R1h, %R1h
-ADD %R1, %R2
-ADDB %R1h, %R2l
-ADDW %R1, %R2
+     ADD %R0, unosBroja
+     XCHG %R1, brojElem
+     JGT scanf
 
-MOV %R1, a(%R1)
-MOV %R1h, 5(%R1)
-MOVB %R1h, 5(%R1)
-MOVW %R1, 5(%R1)
+     AND %R1, brojElem
+     TEST %R0, (%R1)
+     JNE *ucitajListu
 
-MOV %R1, a
-MOV %R1h, 5
-MOVB %R1h, 5
-MOVW %R1, 5
-MOV %R1, 2000
-MOV %R1h, 2000
+     OR 16(%R1), lista
+     NOT %R0, 0xFA(%R4)
+     JMP *100
 
-ADD (%R1), %R1h
-ADD (%R1), %R1h
-ADD (%R1), %R2
-ADD (%R1), %R2
-ADDB (%R1), %R2l
-ADDW (%R1), %R2
-ADDW (%R1), %R2
-ADDB (%R1), %R2h
+     PUSH lista(%PC)
+     MOV lista(%R1), %R0
+     MOV %R0, ispisRezultata
+     JNE printf
+     POP 0x5F(%R5)
 
-MOV (%R1), a(%R1)
-MOV (%R1), 5(%R1)
-MOVB (%R1), a(%R1)
-MOVB (%R1), 5(%R1)
-MOVW (%R1), 5(%R1)
-MOVW (%R1), a(%R1)
+     XOR %R0, lista
+     RET
+     SHR %R0, 100
 
-MOV (%R1), a
-MOV (%R1), 5
-MOVB (%R1), a
-MOVB (%R1), 5
-MOVW (%R1), 5
-MOVW (%R1), a
-MOV (%R1), 2000
-MOV (%R1), 2000
-MOVB (%R1), 2000
-MOVB (%R1), 2000
+    HALT
 
-ADD 5(%R1), %R1h
-ADD a(%R1), %R1h
-ADD 5(%R1), %R2
-ADD a(%R1), %R2
-ADDB 5(%R1), %R2l
-ADDW a(%R1), %R2
-ADDW 5(%R1), %R2
-ADDB a(%R1), %R2h
+.section data:
+   ispis: .word 5,6
+   unosBroja: .byte ispis, ispisRezultata
+   ispisRezultata: .byte ispis, 0x0F, 7
 
-MOV 5(%R1), a(%R1)
-MOV a(%R1), 5(%R1)
-MOVB 5(%R1), a(%R1)
-MOVB a(%R1), 5(%R1)
-MOVW 5(%R1), 5(%R1)
-MOVW a(%R1), a(%R1)
+   brojElem: .skip 0
+   lista: .equ simbol, 0
 
-MOV 5(%R1), a
-MOV a(%R1), 5
-MOVB 5(%R1), a
-MOVB a(%R1), 5
-MOVW 5(%R1), 5
-MOVW a(%R1), a
-MOV 5(%R1), 2000
-MOV a(%R1), 2000
-MOVB 5(%R1), 2000
-MOVB a(%R1), 2000
-
-ADD 5, %R1h
-ADD a, %R1h
-ADD 5, %R2
-ADD a, %R2
-ADDB 5, %R2l
-ADDW a, %R2
-ADDW 5, %R2
-ADDB a, %R2h
-
-MOV 5, a(%R1)
-MOV a, 5(%R1)
-MOVB 5, a(%R1)
-MOVB a, 5(%R1)
-MOVW 5, 5(%R1)
-MOVW a, a(%R1)
-
-MOV 5, a
-MOV a, 5
-MOVB 5, a
-MOVB a, 5
-MOVW 5, 5
-MOVW a , a
-MOV 5, 2000
-MOV a, 2000
-MOVB 5, 2000
-MOVB a, 2000
-
-
-
-a:
 .end
