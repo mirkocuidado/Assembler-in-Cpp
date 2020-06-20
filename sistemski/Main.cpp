@@ -290,6 +290,12 @@ int main(int argc, char* argv[]) {
 
 		bool bilo_end = false;
 
+		bool rept = false;
+		int rept_num = 0;
+		vector<string> rept_niz;
+		int broj_rept_niz = 0;
+		int rept_indeks = 0;
+
 		string niz[50];
 		string znak[50];
 		int nizI = 0;
@@ -298,23 +304,28 @@ int main(int argc, char* argv[]) {
 
 		regex numberr("^(\\+|-)?[0-9]+|(\\+|-)?(0x|0X)[0-9A-Fa-f]{2}|(\\+|-)?(0x|0X)[0-9A-Fa-f]{4}$");
 
-		while (getline(inFile, pom)) {
+		while (true) {
+			int kreten = 0;
+			if(rept==false && rept_niz.size()!=0 && rept_indeks<rept_niz.size() && rept_num!=0){
+				pom = rept_niz[rept_indeks];
+				rept_indeks++;
+				if (rept_indeks == rept_niz.size()) {
+					rept_num--;
+					rept_indeks = 0;
+				}
+			}
+			else {
+				getline(inFile, pom);
+			}
+
+			if (rept == true && pom!="" && pom!=".endr") { rept_niz.push_back(pom); }
+
 			valzi = 0;
 			if (pom != "") item.push_back(pom);
 			else continue;
-
 			int brr = item.size();
 			int i = brr - 1;
 			item[i] = lose_extra_white_space(item[i]);
-
-			/*for (Symbol_Table*tek = prvi; tek != nullptr; tek = tek->next) {
-				//if (tek->getlg() == 'l' && tek->getSection() == -5 && tek->getDefined() == false) throw "ERROR! LOCAL AND UNDEFINED! ";
-				cout << left;
-				cout << setw(10) << tek->getRbr() << setw(10) << tek->getSection() << setw(10) << tek->getlg() << setw(10) << tek->getDefined()
-					<< setw(10) << tek->getValue() << setw(10) << tek->getSize() << setw(10) << tek->getName() << setw(10) << tek->getEqu() << setw(10) << endl;
-			}
-			cout << endl;
-			*/
 
 			int br = 0;
 			int jj = br;
@@ -326,6 +337,7 @@ int main(int argc, char* argv[]) {
 			int flag = 2;
 
 			if (item[i][0] != '.') {
+				// CITANJE STA JE U PITANJU
 				while (item[i][jj] != '\r') {
 					if (item[i][jj] == ':') {
 						jj++; // preskace :
@@ -343,6 +355,7 @@ int main(int argc, char* argv[]) {
 					jj++;
 				}
 
+				// ODLUCIVANJE STA  JE U PITANJU
 				if (reseno == false) {
 					bool samoZaPetLinija = false;
 					for (int i = 0; i < s1.size(); i++) if (s1[i] == '.') {
@@ -400,6 +413,7 @@ int main(int argc, char* argv[]) {
 					else br = 0;
 					while (item[i][br] == ' ') br++;
 
+					//DIREKTIVA
 					if (flag == 2 && isInstruction == false) {
 						string posleTacke = "";
 						br++;
@@ -411,8 +425,26 @@ int main(int argc, char* argv[]) {
 						while (item[i][br] == ' ')
 							br++; // preskoci ' '
 
+						if (posleTacke == "rept") { 
+							
+							string srept = "";
+							while (item[i][br] != ' ' && item[i][br]!='\r') {
+								srept += item[i][br];
+								br++;
+							}
+
+							rept_num = stoi(srept, nullptr,0)-1;
+							
+							rept = true; 
+						}
+						else if(posleTacke=="endr") { 
+						
+							broj_rept_niz = rept_niz.size();
+						
+							rept = false;
+						}
 						// END:
-						if (posleTacke == "end" || posleTacke == "end\r") {
+						else if (posleTacke == "end" || posleTacke == "end\r") {
 							bilo_end = true;
 							Symbol_Table* sec = isInSymbol_Table(SEKCIJA);
 							if (sec != nullptr) {
@@ -427,7 +459,7 @@ int main(int argc, char* argv[]) {
 							break;
 						}
 						// SECTION:
-						if (posleTacke == "section") {
+						else if (posleTacke == "section") {
 							string s1 = "";
 							while (item[i][br] != ':') {
 								if (item[i][br] == ' ') throw "SECTION MUST BE ONE WORD!";
@@ -955,8 +987,10 @@ int main(int argc, char* argv[]) {
 									while (item[i][br] != '(' && item[i][br] != '\r' && item[i][br] != ' ') s4 += item[i][br++];
 									// memdir
 									if (item[i][br] == ' ' || item[i][br] == '\r') {
-										while (item[i][br] == ' ' && item[i][br] == '\t') br++; if (item[i][br] != '\r') throw "SPACE ERROR - memdir!";
-
+										while (item[i][br] == ' ' && item[i][br] == '\t') {
+											br++;
+											if (item[i][br] != '\r') throw "ERROR - memdir! " + item[i];
+										}
 										if (regex_match(s4, numberr) == false)
 											process_move(s4, LC, BROJ_SEKCIJE, SEKCIJA, 2);
 
@@ -1032,7 +1066,8 @@ int main(int argc, char* argv[]) {
 										br++;
 										if (item[i][br] == ' ') throw "CAN'T SEPERATE $ AND OPERAND! " + item[i];
 
-										while (item[i][br] != ' ' && item[i][br] != ',') s2 += item[i][br++];
+										while (item[i][br] != ' ' && item[i][br] != ',' && item[i][br] != '\r') s2 += item[i][br++];
+										if (item[i][br] == '\r') throw "ERROR! " + item[i];
 										if (item[i][br] == ' ') {
 											while (item[i][br] == ' ') br++;
 											if (item[i][br] != ',') throw "ERROR IMMED AND NO , " + item[i];
@@ -1221,7 +1256,8 @@ int main(int argc, char* argv[]) {
 									else if (item[i][br] == '%') {
 										br++;
 										if (item[i][br] == ' ') throw "YOU CAN'T HAVE % AND THEN ' ' " + item[i];
-										while (item[i][br] != ' ' && item[i][br] != ',') s2 += item[i][br++];
+										while (item[i][br] != ' ' && item[i][br] != ','  && item[i][br] != '\r') s2 += item[i][br++];
+										if(item[i][br]=='\r') throw "ERROR, NO COMA!";
 										if (item[i][br] == ' ') {
 											while (item[i][br] == ' ') br++; if (item[i][br] != ',') throw "ERROR, NO COMA!";
 										}
@@ -2040,12 +2076,14 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
+		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
+			cout << tek->getSymbol() << " " << tek->getIK() << " " << tek->getNiz() << " " << tek->getZnaci() << endl;
+				 
+		}
 		/* UBACIVANJE VREDNOSTI I RACUNANJE VREDNOSTI SIMBOLA I PRAVLJENJE ZAPISA
 		   indeks_klasifikacije == 0 => simbol je extern => relokacioni ide ka njemu => u kod 0
 		   indeks_klasifikacije == 1 => simbol je global => relokacioni ka sekciji => u kod njegova vrednost
 									 => simbol je local => relokacioni nema uopste */
-
-
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			vector<string> s1 = tek->getNizBukvalno();
 			vector<string> s2 = tek->getZnaciBukvalno();
@@ -2165,9 +2203,18 @@ int main(int argc, char* argv[]) {
 						poslR->setSize(tek->getSize());
 					}
 					else {
+						if (pom->getEqu()) {
+							for (Equ_Table* promena = prviE; promena != nullptr; promena = promena->next) {
+								if (promena->getSymbol() == pom->getName()) {
+									a = promena->getIK();
+								}
+							}
+						}
+						
 						addR(a, tek->getPatch(), "direct");
 						poslR->setSection(tek->getSectionNumber());
 						poslR->setSize(tek->getSize());
+						
 					}
 				}
 			}
@@ -2247,6 +2294,6 @@ int main(int argc, char* argv[]) {
 
 	catch (const char* m) { cout << m << endl; }
 	catch (string m) { cout << m << endl; }
-	int c; cin >> c;
+	//int c; cin >> c;
 	return 0;
 }

@@ -2,47 +2,13 @@ Section table
 
 Number    Section   L/G       Defined   Value     Size      Name      Equ       
 0         0         l         1         0         0         UND       0         
-1         0         g         0         0         0         printf    0         
-2         0         g         0         0         0         scanf     0         
-3         0         g         0         0         0         exit      0         
-4         8         g         1         0         0         main      0         
-5         0         g         0         0         0         ucitajListu0         
-6         0         g         0         0         0         oslobodi  0         
-7         0         g         0         0         0         obrada    0         
-8         8         l         1         0         87        text      0         
-9         14        l         1         0         0         ispis     0         
-10        14        l         1         4         0         unosBroja 0         
-11        14        l         1         9         0         brojElem  0         
-12        14        l         1         9         0         lista     0         
-13        14        l         1         6         0         ispisRezultata0         
-14        14        l         1         0         9         data      0         
-15        -5        l         1         0         0         simbol    1         
+1         1         l         1         0         35        sekcija   0         
 
 Relocation table
 
 Number    Section/Symbol      Address/For Symbol  Way                 Linker    For Section    Sign      Size      
-1         8                   5                   direct              0         8              +         w         
-2         1                   9                   direct              0         8              +         w         
-3         8                   14                  direct              0         8              +         w         
-4         8                   19                  direct              0         8              +         w         
-5         2                   23                  direct              0         8              +         w         
-6         8                   28                  direct              0         8              +         w         
-7         5                   35                  direct              0         8              +         w         
-8         8                   42                  direct              0         8              +         w         
-9         8                   55                  PCrel               -2        8              +         w         
-10        8                   59                  direct              0         8              +         w         
-11        8                   65                  direct              0         8              +         w         
-12        1                   69                  direct              0         8              +         w         
-13        8                   78                  direct              0         8              +         w         
-14        14                  4                   direct              0         14             +         b         
-15        14                  5                   direct              0         14             +         b         
-16        14                  6                   direct              0         14             +         b         
 
-text: 
-4C 28 64 20 80 00 00 2C 00 00 00 6C 20 80 04 00 5C 22 80 09 00 44 00 00 00 9C 
-22 80 09 00 B4 20 42 3C 80 00 00 A0 62 10 00 80 09 00 94 20 68 FA 00 2C 80 
-64 00 4C 6E 09 00 64 62 09 00 20 64 20 80 06 00 3C 00 00 00 54 6A 5F 00 AC 
-20 80 09 00 10 C4 20 80 64 00 00 
-data: 
-05 00 06 00 00 06 00 0F 07 
+sekcija: 
+01 02 00 4C 00 05 00 01 02 00 4C 00 05 00 01 02 00 4C 00 05 00 01 02 00 4C 00 
+05 00 01 02 00 4C 00 05 00 
 

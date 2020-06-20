@@ -1,50 +1,14 @@
-.extern printf
-   .extern scanf
-   .extern exit
-   .global main
+.section sekcija:
 
-   .extern ucitajListu
-   .extern oslobodi
-   .extern obrada
+.rept 5
 
-.section text:
-main:
+.byte 1
+.word 2
+PUSH $5
 
-     PUSH %R4
+.endr
 
-     MOV %R0, ispis
-     JMP printf
-
-     ADD %R0, unosBroja
-     XCHG %R1, brojElem
-     JGT scanf
-
-     AND %R1, brojElem
-     TEST %R0, (%R1)
-     JNE *ucitajListu
-
-     OR 16(%R1), lista
-     NOT %R0, 0xFA(%R4)
-     JMP *100
-
-     PUSH lista(%PC)
-     MOV lista(%R1), %R0
-     MOV %R0, ispisRezultata
-     JNE printf
-     POP 0x5F(%R5)
-
-     XOR %R0, lista
-     RET
-     SHR %R0, 100
-
-    HALT
-
-.section data:
-   ispis: .word 5,6
-   unosBroja: .byte ispis, ispisRezultata
-   ispisRezultata: .byte ispis, 0x0F, 7
-
-   brojElem: .skip 0
-   lista: .equ simbol, 0
 
 .end
+
+.skip 500
