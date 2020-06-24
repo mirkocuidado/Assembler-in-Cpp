@@ -1,0 +1,131 @@
+1) Local EQU Absolute
+
+.section sekcija:
+.skip 10
+
+
+.equ a,5-10
+.section text:
+.skip 10 
+
+PUSH a(%PC)
+
+.end
+
+
+2) Local EQU od_Local
+
+.section sekcija:
+.skip 10
+
+
+.equ a,b
+.section text:
+.skip 20 
+b:
+PUSH a(%PC)
+
+.end
+
+3) Local EQU od_global
+
+.section sekcija:
+.skip 10
+
+
+.equ a,b
+.section text:
+.skip 20 
+b:
+PUSH a(%PC)
+.global b
+.end
+
+4) Local EQU od_extern
+
+.section sekcija:
+.skip 10
+
+
+.equ a,b
+.section text:
+.skip 20 
+PUSH a(%PC)
+.extern b
+.end
+
+5) Global EQU Absolute
+
+.section sekcija:
+.skip 10
+
+.global a
+.equ a,5-10
+.section text:
+.skip 10 
+
+PUSH a(%PC)
+
+.end
+
+6) Global EQU od_local
+
+.section sekcija:
+.skip 10
+
+.global a
+.equ a,b
+.section text:
+.skip 10 
+b:
+PUSH a(%PC)
+
+.end
+
+7) Global EQU od_global
+
+.section sekcija:
+.skip 10
+
+.global a
+.equ a,b
+.section text:
+.skip 10 
+b:
+.global b
+PUSH a(%PC)
+
+.end
+
+8) Global EQU od_extern
+
+.section sekcija:
+.skip 10
+
+.global a
+.equ a,b
+.section text:
+.skip 10 
+.extern b
+PUSH a(%PC)
+
+.end
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

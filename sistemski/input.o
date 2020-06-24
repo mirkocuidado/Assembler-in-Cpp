@@ -2,13 +2,21 @@ Section table
 
 Number    Section   L/G       Defined   Value     Size      Name      Equ       
 0         0         l         1         0         0         UND       0         
-1         1         l         1         0         35        sekcija   0         
+1         1         l         1         0         11        sekcija   0         
+2         0         g         0         0         0         aa        0         
+3         0         g         0         0         0         bb        0         
+4         0         g         1         146       0         a         1         
+5         5         l         1         0         14        text      0         
+6         0         g         0         0         0         b         0         
 
 Relocation table
 
 Number    Section/Symbol      Address/For Symbol  Way                 Linker    For Section    Sign      Size      
+1         2                   4                   direct              0         EQU            +         w         
+2         2                   12                  direct              0         5              +         w         
 
 sekcija: 
-01 02 00 4C 00 05 00 01 02 00 4C 00 05 00 01 02 00 4C 00 05 00 01 02 00 4C 00 
-05 00 01 02 00 4C 00 05 00 
+00 00 00 00 00 00 00 00 00 00 00 
+text: 
+00 00 00 00 00 00 00 00 00 00 4C 62 92 00 
 

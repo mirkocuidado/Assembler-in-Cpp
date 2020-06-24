@@ -1,14 +1,13 @@
 .section sekcija:
+.skip 11
 
-.rept 5
-
-.byte 1
-.word 2
-PUSH $5
-
-.endr
-
+.extern aa,bb
+.equ a, aa
+.global a
+.section text:
+.skip 10 
+.extern b
+PUSH a(%R1)
 
 .end
-
 .skip 500

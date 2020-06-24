@@ -241,6 +241,31 @@ void rewriteCode(Symbol_Table* pom, For_Table* tek, Symbol_Table* c) {
 	}
 }
 
+void rewriteCodee(Symbol_Table* pom, For_Table* tek, Symbol_Table* c, int a) {
+	char vel = tek->getSize();
+	if (vel == 'b') {
+		if (pom->getValue() > 255 || pom->getValue() < -255) throw "Byte forward table element with size of Word. ";
+		int b = pom->getValue() + a;
+		string s = decToBinary(b, 1);
+		s = binary_hexa(s);
+		c->changeCode(tek->getPatch(), s);
+	}
+	else {
+		int b = pom->getValue() + a;
+		string s = decToBinary(b, 2);
+		s = binary_hexa(s);
+		string s1 = "";
+		string s2 = "";
+
+		for (int i = 0; i < s.size(); i++)
+			if (i <= 1) s1 += s[i];
+			else s2 += s[i];
+
+		c->changeCode(tek->getPatch(), s1);
+		c->changeCode(tek->getPatch() + 1, s2);
+	}
+}
+
 void process_move(string s4, int LC, int BROJ_SEKCIJE, string SEKCIJA, int pomerajLC) {
 	Symbol_Table* pom = isInSymbol_Table(s4);
 	if (pom == nullptr) {
@@ -1994,7 +2019,6 @@ int main(int argc, char* argv[]) {
 		if (bilo_end == false) throw "NO .end!";
 
 		// PROVERA KRUZNE ZAVISNOSTI I ZAMENA VREDNOSTI ZA EQU!
-
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			string symbol = tek->getSymbol();
 			vector<string> sMain1 = tek->getNizBukvalno();
@@ -2038,6 +2062,7 @@ int main(int argc, char* argv[]) {
 				}
 			}
 		}
+
 		//PROVERA INDEKSA KLASIFIKACIJE I BELEZENJE ZA KOJU SEKCIJU TREBA ICI RELOKACIONI
 		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
 			vector<string> s1 = tek->getNizBukvalno();
@@ -2076,10 +2101,6 @@ int main(int argc, char* argv[]) {
 			}
 		}
 
-		for (Equ_Table* tek = prviE; tek != nullptr; tek = tek->next) {
-			cout << tek->getSymbol() << " " << tek->getIK() << " " << tek->getNiz() << " " << tek->getZnaci() << endl;
-				 
-		}
 		/* UBACIVANJE VREDNOSTI I RACUNANJE VREDNOSTI SIMBOLA I PRAVLJENJE ZAPISA
 		   indeks_klasifikacije == 0 => simbol je extern => relokacioni ide ka njemu => u kod 0
 		   indeks_klasifikacije == 1 => simbol je global => relokacioni ka sekciji => u kod njegova vrednost
@@ -2146,7 +2167,7 @@ int main(int argc, char* argv[]) {
 			if (pom == nullptr) {
 				throw "ERROR! NOT IN TABLE! ";
 			}
-			else if (pom->getlg() == 'l' && pom->getEqu() && pom->getSection() == 0) {
+			else if ( (pom->getlg() == 'l' || pom->getlg()=='g') && pom->getEqu() && pom->getSection() == 0) {
 				for (Equ_Table* naca = prviE; naca != nullptr; naca = naca->next) {
 					if (naca->getSymbol() == pom->getName()) {
 						int a = tek->getSectionNumber();
@@ -2183,17 +2204,9 @@ int main(int argc, char* argv[]) {
 					}
 				}
 			}
-			else if (pom->getlg() == 'g' && pom->getEqu() && pom->getSection() == 0) {
-				int b = pom->getRbr();
-				addR(b, tek->getPatch(), "direct");
-				poslR->setSection(tek->getSectionNumber());
-				poslR->setSize(tek->getSize());
-			}
 			else if (pom->getlg() == 'l') {
 				int a = tek->getSectionNumber();
 				Symbol_Table* c = getCodeNumberMain(a);
-
-				rewriteCode(pom, tek, c);
 
 				if (pom->getlg() == 'l' && pom->getSection() != -5) {
 					if (tek->getLinker() != 0 || tek->getIma_Pomeraj()) {
@@ -2216,7 +2229,17 @@ int main(int argc, char* argv[]) {
 						poslR->setSize(tek->getSize());
 						
 					}
+					rewriteCode(pom, tek, c);
 				}
+				else {
+					if (tek->getLinker() != 0 || tek->getIma_Pomeraj()) {
+						rewriteCodee(pom, tek, c, tek->getLinker());
+					}
+					else {
+						rewriteCode(pom, tek, c);
+					}
+				}
+				
 			}
 			else if (pom->getSection() != -5) {
 				if (tek->getLinker() != 0 || tek->getIma_Pomeraj()) {
@@ -2232,9 +2255,40 @@ int main(int argc, char* argv[]) {
 				}
 			}
 			else if (pom->getlg() == 'g') {
-				addR(pom->getRbr(), tek->getPatch(), "direct");
-				poslR->setSection(tek->getSectionNumber());
-				poslR->setSize(tek->getSize());
+				for (Equ_Table* naca = prviE; naca != nullptr; naca = naca->next) {
+					if (naca->getSymbol() == pom->getName()) {
+						int a = tek->getSectionNumber();
+						Symbol_Table* c = getCodeNumberMain(a);
+
+						vector<string> s1 = naca->getNizBukvalno();
+						vector<string> s2 = naca->getZnaciBukvalno();
+
+						for (int i = 0; i < s1.size(); i++) {
+							Symbol_Table* pompom = isInSymbol_Table(s1[i]);
+							if (pompom == nullptr) {
+								
+
+								if (tek->getLinker() != 0 || tek->getIma_Pomeraj()) {
+									addR(pom->getRbr(), tek->getPatch(), "PCrel");
+									poslR->setLinker(tek->getLinker());
+									poslR->setSection(tek->getSectionNumber());
+									poslR->setSign(s2[i][0]);
+									poslR->setSize(tek->getSize());
+								}
+								else {
+									addR(pom->getRbr(), tek->getPatch(), "direct");
+									poslR->setSection(tek->getSectionNumber());
+									poslR->setSign(s2[i][0]);
+									poslR->setSize(tek->getSize());
+								}
+
+								break;
+								
+							}
+						}
+						break;
+					}
+				}
 			}
 		}
 
